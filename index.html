@@ -727,9 +727,8 @@ footer { text-align: center; padding: 20px 20px 28px; }
 /* ══════════════════════════════════════════════════════
    CONFIGURATION
    ══════════════════════════════════════════════════════ */
-// Password is stored as SHA-256 hash (never plain text in source)
-// Hash of the admin password — change by running: crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourpassword')).then(b => [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''))
-const ADMIN_PASSWORD_HASH = "66f60568ff1b2c0fc5d6c66b40dc7b95b5bf9c79b44a218cf487b98a62d2f21e";
+// Admin password — change this to whatever you want
+const ADMIN_PASSWORD = "admin123";
 
 const MONTHS_LIST = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -872,15 +871,8 @@ document.getElementById('togglePw').addEventListener('click', () => {
   document.getElementById('eyeClosed').style.display = isPass ? '' : 'none';
 });
 
-async function hashString(str) {
-  const msgBuffer = new TextEncoder().encode(str);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  return [...new Uint8Array(hashBuffer)].map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function attemptLogin() {
-  const enteredHash = await hashString(loginPassword.value);
-  if (enteredHash === ADMIN_PASSWORD_HASH) {
+function attemptLogin() {
+  if (loginPassword.value === ADMIN_PASSWORD) {
     loginOverlay.style.display = 'none';
     adminContent.style.display = 'block';
     renderStats();
