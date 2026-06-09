@@ -83,72 +83,7 @@ header::after {
 .header-link { text-decoration: none; color: inherit; cursor: pointer; transition: opacity .2s; }
 .header-link:hover { opacity: 0.8; }
 
-/* ── LOGIN OVERLAY ──────────────────────────────────── */
-#loginOverlay {
-  position: fixed; inset: 0; z-index: 999;
-  background: rgba(11,31,66,.92);
-  backdrop-filter: blur(8px);
-  display: flex; align-items: center; justify-content: center;
-}
-.login-box {
-  background: var(--white);
-  border-radius: 18px;
-  padding: 48px 40px;
-  width: 100%; max-width: 420px;
-  box-shadow: 0 24px 64px rgba(11,31,66,.45);
-  text-align: center;
-  animation: popIn .4s cubic-bezier(.22,1,.36,1);
-}
-@keyframes popIn {
-  from { opacity:0; transform: scale(.92) translateY(20px); }
-  to   { opacity:1; transform: scale(1) translateY(0); }
-}
-.login-icon {
-  width: 64px; height: 64px;
-  background: linear-gradient(135deg, var(--navy), var(--blue));
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 20px;
-}
-.login-icon svg { width: 30px; height: 30px; color: white; }
-.login-box h2 { font-family: 'Nunito', sans-serif; font-size: 24px; color: var(--navy); margin-bottom: 6px; }
-.login-box p { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
-.login-input-wrap { position: relative; margin-bottom: 16px; }
-.login-input-wrap input {
-  width: 100%; padding: 14px 46px 14px 16px;
-  border: 1.5px solid var(--border); border-radius: 10px;
-  font-family: 'JetBrains Mono', monospace; font-size: 15px;
-  color: var(--text); background: var(--light);
-  transition: border-color .2s, box-shadow .2s;
-  outline: none; letter-spacing: 2px;
-}
-.login-input-wrap input:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(59,130,246,.18); }
-.toggle-pw {
-  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer; color: var(--muted);
-  display: flex; align-items: center;
-}
-.toggle-pw:hover { color: var(--blue); }
-.toggle-pw svg { width: 18px; height: 18px; }
-.login-btn {
-  width: 100%; padding: 14px;
-  background: linear-gradient(135deg, var(--navy), var(--blue));
-  color: var(--white); border: none; border-radius: 10px;
-  font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700;
-  cursor: pointer; transition: all .2s; letter-spacing: .5px;
-}
-.login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(11,31,66,.35); }
-.login-error {
-  color: var(--red); font-size: 13px; margin-top: 12px;
-  display: none; animation: shake .3s ease;
-}
-@keyframes shake {
-  0%,100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
-}
-
 /* ── MAIN ───────────────────────────────────────────── */
-#adminContent { display: none; }
 main { max-width: 1100px; margin: 40px auto; padding: 0 20px 80px; }
 
 /* ── PAGE TITLE ─────────────────────────────────────── */
@@ -161,17 +96,6 @@ main { max-width: 1100px; margin: 40px auto; padding: 0 20px 80px; }
   display: flex; align-items: center; gap: 10px;
 }
 .page-title h1 svg { width: 28px; height: 28px; color: var(--sky); }
-.logout-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--danger-bg); color: var(--red);
-  border: 1.5px solid var(--danger-border);
-  font-size: 13px; font-weight: 700; padding: 8px 18px;
-  border-radius: 20px; cursor: pointer; transition: all .2s;
-  font-family: 'Nunito Sans', sans-serif;
-}
-.logout-btn:hover { background: #fecaca; }
-.logout-btn svg { width: 14px; height: 14px; }
-
 /* ── STATS ROW ───────────────────────────────────────── */
 .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
 .stat-card {
@@ -419,33 +343,6 @@ footer { text-align: center; padding: 20px 20px 28px; }
 </head>
 <body>
 
-<!-- ═══════════════ LOGIN OVERLAY ═══════════════ -->
-<div id="loginOverlay">
-  <div class="login-box">
-    <div class="login-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
-      </svg>
-    </div>
-    <h2>Admin Login</h2>
-    <p>Sri Kamakshi Jagan Cable Network</p>
-    <div class="login-input-wrap">
-      <input type="password" id="loginPassword" placeholder="Enter admin password" autocomplete="current-password" />
-      <button class="toggle-pw" id="togglePw" type="button" title="Show/hide password">
-        <svg id="eyeOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        <svg id="eyeClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
-        </svg>
-      </button>
-    </div>
-    <button class="login-btn" id="loginBtn">Unlock Admin Panel</button>
-    <div class="login-error" id="loginError">❌ Incorrect password. Try again.</div>
-  </div>
-</div>
-
 <!-- ═══════════════════ HEADER ═══════════════════ -->
 <header>
   <div class="header-left">
@@ -479,7 +376,6 @@ footer { text-align: center; padding: 20px 20px 28px; }
 </header>
 
 <!-- ═══════════════════ ADMIN CONTENT ════════════════════ -->
-<div id="adminContent">
 <main>
 
   <!-- Page Title -->
@@ -490,12 +386,6 @@ footer { text-align: center; padding: 20px 20px 28px; }
       </svg>
       Customer Management
     </h1>
-    <button class="logout-btn" id="logoutBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
-      </svg>
-      Logout
-    </button>
   </div>
 
   <!-- Stats Row -->
@@ -583,58 +473,7 @@ footer { text-align: center; padding: 20px 20px 28px; }
     </table>
   </div>
 
-  <!-- GitHub Push Section -->
-  <div class="github-section">
-    <h3>
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-      </svg>
-      GitHub Auto-Sync
-    </h3>
-    <p>When you save customer changes, generate the updated <code>invoices.html</code> and push it to the customer's GitHub repo via the API. The customer's page will automatically reflect the updated data.</p>
-
-    <div class="github-form">
-      <div class="form-group">
-        <label class="form-label">GitHub Token (PAT)</label>
-        <input type="password" class="form-input" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Customer Repo (owner/repo)</label>
-        <input type="text" class="form-input" id="ghRepo" placeholder="skjcn/customer-invoices" />
-      </div>
-      <div>
-        <label class="form-label" style="display:block;margin-bottom:6px;">Auto-push on Save</label>
-        <button class="push-btn" id="testGhBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/>
-          </svg>
-          Test Connection
-        </button>
-      </div>
-    </div>
-    <div class="push-status" id="pushStatus"></div>
-  </div>
-
-  <!-- Instructions -->
-  <div class="info-card">
-    <h4>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
-      </svg>
-      How the GitHub Sync Works
-    </h4>
-    <ul>
-      <li>Admin panel lives in your <strong>admin GitHub repo</strong> (private). Edit customer data here.</li>
-      <li>Customer invoices page lives in a <strong>separate public repo</strong> (e.g. <code>skjcn/customer-invoices</code>).</li>
-      <li>When you click <strong>Save</strong> on a customer, the admin generates a fresh <code>invoices.html</code> and pushes it to the customer repo via the <strong>GitHub Contents API</strong> using your PAT token.</li>
-      <li>The customer's page at <code>skjcn.github.io/customer-invoices/</code> updates automatically through GitHub Pages — no manual steps needed.</li>
-      <li>Store your GitHub Token in the field above. It is never sent anywhere except directly to <code>api.github.com</code>.</li>
-    </ul>
-  </div>
-
 </main>
-</div><!-- /adminContent -->
-
 <!-- ═══════════════════ FOOTER ════════════════════ -->
 <footer>
   <a class="footer-brand" href="https://skjcn.github.io/home/" target="_blank">
@@ -727,9 +566,6 @@ footer { text-align: center; padding: 20px 20px 28px; }
 /* ══════════════════════════════════════════════════════
    CONFIGURATION
    ══════════════════════════════════════════════════════ */
-// Admin password — change this to whatever you want
-const ADMIN_PASSWORD = "8600859602";
-
 const MONTHS_LIST = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const SHORT_DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -858,47 +694,12 @@ setInterval(updateClock, 1000);
 updateClock();
 document.getElementById('footerYear').textContent = new Date().getFullYear();
 
-/* ══ LOGIN ══════════════════════════════════════════════ */
-const loginOverlay = document.getElementById('loginOverlay');
-const adminContent = document.getElementById('adminContent');
-const loginPassword = document.getElementById('loginPassword');
-const loginError = document.getElementById('loginError');
-
-document.getElementById('togglePw').addEventListener('click', () => {
-  const isPass = loginPassword.type === 'password';
-  loginPassword.type = isPass ? 'text' : 'password';
-  document.getElementById('eyeOpen').style.display = isPass ? 'none' : '';
-  document.getElementById('eyeClosed').style.display = isPass ? '' : 'none';
-});
-
-function attemptLogin() {
-  if (loginPassword.value === ADMIN_PASSWORD) {
-    loginOverlay.style.display = 'none';
-    adminContent.style.display = 'block';
-    renderStats();
-    renderTable();
-    setTimeout(() => {
-      document.querySelector('.railwire-block').classList.add('animate');
-      document.querySelector('.brand-block').classList.add('animate');
-    }, 100);
-  } else {
-    loginError.style.display = 'block';
-    loginError.style.animation = 'none';
-    void loginError.offsetWidth;
-    loginError.style.animation = '';
-    loginPassword.value = '';
-    loginPassword.focus();
-  }
-}
-document.getElementById('loginBtn').addEventListener('click', attemptLogin);
-loginPassword.addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
-
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  adminContent.style.display = 'none';
-  loginOverlay.style.display = 'flex';
-  loginPassword.value = '';
-  loginError.style.display = 'none';
-});
+renderStats();
+renderTable();
+setTimeout(() => {
+  document.querySelector('.railwire-block').classList.add('animate');
+  document.querySelector('.brand-block').classList.add('animate');
+}, 100);
 
 /* ══ STATS ══════════════════════════════════════════════ */
 function renderStats() {
