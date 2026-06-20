@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SKJCN – Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Nunito+Sans:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script>
+  // Immediately hide admin content if not authenticated — zero flash
+  if (sessionStorage.getItem('skjcn_auth') !== 'ok') {
+    document.documentElement.classList.add('pre-login');
+  }
+</script>
+<style>
+  html.pre-login body { overflow: hidden; }
+  html.pre-login header,
+  html.pre-login main,
+  html.pre-login footer { visibility: hidden; }
+</style>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -31,7 +43,11 @@ body {
   color: var(--text);
   min-height: 100vh;
 }
-
+body.login-active { overflow: hidden; }
+/* Hide admin content until authenticated — prevents flash */
+body.login-active header,
+body.login-active main,
+body.login-active footer { visibility: hidden; }
 /* ── HEADER ─────────────────────────────────────────── */
 header {
   background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
@@ -339,9 +355,140 @@ footer { text-align: center; padding: 20px 20px 28px; }
   .months-grid { grid-template-columns: repeat(3,1fr); }
   main { padding: 0 12px 60px; }
 }
+
+/* ── LOGIN SCREEN ─────────────────────────────────────── */
+#loginScreen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(135deg, var(--navy) 0%, #14357a 60%, #0b1f42 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+#loginScreen.hidden { display: none; }
+.login-box {
+  background: var(--white); border-radius: 20px;
+  padding: 44px 40px; width: 100%; max-width: 400px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.45);
+  animation: popIn .4s cubic-bezier(.22,1,.36,1);
+}
+@keyframes popIn { from { opacity:0; transform:scale(.93) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.login-logo {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  margin-bottom: 28px;
+}
+.login-logo-icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--navy), var(--blue));
+  display: flex; align-items: center; justify-content: center;
+}
+.login-logo-icon svg { width: 28px; height: 28px; color: var(--white); }
+.login-title {
+  font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 800;
+  color: var(--navy); text-align: center; line-height: 1.2;
+}
+.login-sub { font-size: 13px; color: var(--muted); text-align: center; margin-top: 2px; }
+.login-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.login-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.login-input-wrap { position: relative; }
+.login-input-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+.login-input {
+  width: 100%; padding: 12px 40px 12px 40px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: 'Nunito Sans', sans-serif; font-size: 15px; color: var(--text);
+  background: var(--light); outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.login-input:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(59,130,246,.15); background: var(--white); }
+.login-toggle {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  display: flex; align-items: center; padding: 4px;
+  transition: color .2s;
+}
+.login-toggle:hover { color: var(--navy); }
+.login-toggle svg { width: 16px; height: 16px; }
+.login-error {
+  background: var(--danger-bg); color: var(--red);
+  border: 1.5px solid var(--danger-border);
+  border-radius: 10px; padding: 10px 14px;
+  font-size: 13px; font-weight: 600; margin-bottom: 16px;
+  display: none; align-items: center; gap: 8px;
+}
+.login-error.show { display: flex; }
+.login-error svg { width: 15px; height: 15px; flex-shrink: 0; }
+.login-btn {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, var(--navy), var(--blue));
+  color: var(--white); border: none; border-radius: 10px;
+  font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all .2s; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.login-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(11,31,66,.35); }
+.login-btn:active { transform: translateY(0); }
+.login-btn svg { width: 16px; height: 16px; }
+
+/* ── LOGOUT BUTTON ─────────────────────────────────────── */
+.logout-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.1); color: var(--white);
+  border: 1.5px solid rgba(255,255,255,.2);
+  font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: .5px; text-transform: uppercase;
+  padding: 7px 14px; border-radius: 20px; cursor: pointer;
+  transition: background .2s, border-color .2s;
+  margin-top: 6px;
+}
+.logout-btn:hover { background: rgba(220,38,38,.25); border-color: rgba(220,38,38,.5); }
+.logout-btn svg { width: 13px; height: 13px; }
 </style>
 </head>
 <body>
+
+<!-- ═══════════════════ LOGIN SCREEN ═══════════════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="login-title">Admin Panel</div>
+        <div class="login-sub">Sri Kamakshi Jagan Cable Network</div>
+      </div>
+    </div>
+
+    <div class="login-field">
+      <label class="login-label">Password</label>
+      <div class="login-input-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/>
+        </svg>
+        <input class="login-input" type="password" id="loginPassword" placeholder="Enter admin password" autocomplete="current-password" />
+        <button class="login-toggle" id="togglePwd" type="button" title="Show/hide password">
+          <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="login-error" id="loginError">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+      </svg>
+      <span id="loginErrorMsg">Incorrect password. Please try again.</span>
+    </div>
+
+    <button class="login-btn" id="loginBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+      </svg>
+      Login
+    </button>
+  </div>
+</div>
 
 <!-- ═══════════════════ HEADER ═══════════════════ -->
 <header>
@@ -372,6 +519,12 @@ footer { text-align: center; padding: 20px 20px 28px; }
       </svg>
       Admin
     </div>
+    <button class="logout-btn" id="logoutBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
+      </svg>
+      Logout
+    </button>
   </div>
 </header>
 
@@ -473,6 +626,53 @@ footer { text-align: center; padding: 20px 20px 28px; }
     </table>
   </div>
 
+  <!-- GitHub Push Section -->
+  <div class="github-section">
+    <h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
+      </svg>
+      GitHub Auto-Push
+    </h3>
+    <p>Enter your GitHub Personal Access Token and repo to automatically push customer invoice pages when you save.</p>
+    <div class="github-form">
+      <div class="form-group">
+        <label class="form-label">GitHub Token</label>
+        <input type="password" class="form-input" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Repository (owner/repo)</label>
+        <input type="text" class="form-input" id="ghRepo" placeholder="e.g. skjcn/customers" />
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end;">
+        <button class="push-btn" id="testGhBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Test Connection
+        </button>
+      </div>
+    </div>
+    <div class="push-status" id="pushStatus"></div>
+  </div>
+
+  <!-- Instructions Card -->
+  <div class="info-card">
+    <h4>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+      </svg>
+      How to set up GitHub push
+    </h4>
+    <ul>
+      <li>Create a GitHub Personal Access Token at <code>github.com → Settings → Developer settings → Personal access tokens</code></li>
+      <li>Grant the token <code>repo</code> scope (read &amp; write access to repositories)</li>
+      <li>Enter the token and your customer repo in the format <code>owner/repo-name</code></li>
+      <li>Each customer will have their invoices.html pushed to the root of their configured repo on save</li>
+      <li>Use the per-customer <strong>Customer Repo</strong> field to override the global repo for individual customers</li>
+    </ul>
+  </div>
+
 </main>
 <!-- ═══════════════════ FOOTER ════════════════════ -->
 <footer>
@@ -563,6 +763,93 @@ footer { text-align: center; padding: 20px 20px 28px; }
 </div>
 
 <script>
+/* ══════════════════════════════════════════════════════
+   AUTH — PASSWORD PROTECTION
+   ══════════════════════════════════════════════════════ */
+const ADMIN_PASSWORD = 'skjcn@admin2024'; // ← change this to your password
+
+const loginScreen  = document.getElementById('loginScreen');
+const loginInput   = document.getElementById('loginPassword');
+const loginBtn     = document.getElementById('loginBtn');
+const loginError   = document.getElementById('loginError');
+const loginErrMsg  = document.getElementById('loginErrorMsg');
+const logoutBtn    = document.getElementById('logoutBtn');
+const togglePwd    = document.getElementById('togglePwd');
+const eyeIcon      = document.getElementById('eyeIcon');
+
+// Show/hide password
+togglePwd.addEventListener('click', () => {
+  const isText = loginInput.type === 'text';
+  loginInput.type = isText ? 'password' : 'text';
+  eyeIcon.innerHTML = isText
+    ? '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>'
+    : '<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>';
+});
+
+function showAdminContent() {
+  document.documentElement.classList.remove('pre-login');
+  document.body.classList.remove('login-active');
+  loginScreen.classList.add('hidden');
+  // Trigger header animation only after content becomes visible
+  setTimeout(() => {
+    const rb = document.querySelector('.railwire-block');
+    const bb = document.querySelector('.brand-block');
+    if (rb) rb.classList.add('animate');
+    if (bb) bb.classList.add('animate');
+  }, 80);
+}
+
+function checkAuth() {
+  if (sessionStorage.getItem('skjcn_auth') === 'ok') {
+    showAdminContent();
+  } else {
+    document.body.classList.add('login-active');
+    loginScreen.classList.remove('hidden');
+    setTimeout(() => loginInput.focus(), 100);
+  }
+}
+
+function attemptLogin() {
+  const val = loginInput.value;
+  if (val === ADMIN_PASSWORD) {
+    sessionStorage.setItem('skjcn_auth', 'ok');
+    loginError.classList.remove('show');
+    loginInput.value = '';
+    showAdminContent();
+  } else {
+    loginError.classList.add('show');
+    loginErrMsg.textContent = 'Incorrect password. Please try again.';
+    loginInput.value = '';
+    loginInput.focus();
+    // Shake animation
+    loginInput.style.animation = 'none';
+    loginInput.offsetHeight; // reflow
+    loginInput.style.animation = 'shake .35s ease';
+  }
+}
+
+loginBtn.addEventListener('click', attemptLogin);
+loginInput.addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
+
+logoutBtn.addEventListener('click', () => {
+  if (confirm('Are you sure you want to logout?')) {
+    sessionStorage.removeItem('skjcn_auth');
+    document.body.classList.add('login-active');
+    loginInput.value = '';
+    loginError.classList.remove('show');
+    loginScreen.classList.remove('hidden');
+    setTimeout(() => loginInput.focus(), 100);
+  }
+});
+
+// Add shake keyframe dynamically
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = '@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }';
+document.head.appendChild(shakeStyle);
+
+// Run auth check immediately
+checkAuth();
+
 /* ══════════════════════════════════════════════════════
    CONFIGURATION
    ══════════════════════════════════════════════════════ */
@@ -696,10 +983,6 @@ document.getElementById('footerYear').textContent = new Date().getFullYear();
 
 renderStats();
 renderTable();
-setTimeout(() => {
-  document.querySelector('.railwire-block').classList.add('animate');
-  document.querySelector('.brand-block').classList.add('animate');
-}, 100);
 
 /* ══ STATS ══════════════════════════════════════════════ */
 function renderStats() {
@@ -1326,13 +1609,7 @@ document.getElementById('testGhBtn').addEventListener('click', async () => {
   }
 });
 
-/* ══ HEADER ANIMATION ═══════════════════════════════════ */
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    document.querySelector('.railwire-block').classList.add('animate');
-    document.querySelector('.brand-block').classList.add('animate');
-  }, 1000);
-});
+/* header animation handled by showAdminContent() */
 </script>
 </body>
 </html>`;
