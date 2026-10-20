@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Noto+Sans+Telugu:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#fffcf4;          /* page background */
+    --bg:#ffffff;          /* page background */
     --paper:#F6F1E4;       /* soft hover / button surface */
     --paper-line:#DCD5C3;
     --card:#FFFDF8;
@@ -54,7 +54,6 @@
     width:32px;height:32px;padding:0;border-radius:6px;cursor:pointer;
     display:inline-flex;align-items:center;justify-content:center;line-height:1;
   }
-  button.refresh:hover{background:var(--ink);color:var(--bg);}
 
   /* language switch: shows the language you will switch to, like a dark / light toggle */
   .langbtn{
@@ -64,7 +63,6 @@
     font:inherit;font-size:14px;font-weight:600;line-height:1;cursor:pointer;
     transition:background .15s ease;
   }
-  .langbtn:hover{background:rgba(255,97,21,.22);}
   .langbtn svg{width:18px;height:18px;flex:none;}
 
   /* ---------- search ---------- */
@@ -112,7 +110,7 @@
     transition:background .15s ease, color .15s ease;
   }
   .plus svg{width:22px;height:22px;}
-  .plus:hover,.plus[aria-expanded="true"]{background:var(--paper-line);}
+  .plus[aria-expanded="true"]{background:var(--paper-line);}
   .plus.on{background:rgba(255,97,21,.14);color:var(--accent-deep);}
 
   .clear{
@@ -121,7 +119,6 @@
     font-size:20px;line-height:1;cursor:pointer;
     align-items:center;justify-content:center;
   }
-  .clear:hover{background:var(--paper-line);}
   .has-text .clear{display:inline-flex;}
 
   /* area / sub area menu: a dropdown under the + (tablet, desktop); a bottom sheet on phones */
@@ -143,7 +140,7 @@
     padding:9px 12px;border-radius:10px;cursor:pointer;
     touch-action:manipulation;-webkit-tap-highlight-color:transparent;
   }
-  .opt:hover,.opt:focus-visible{background:var(--paper);}
+  .opt:focus-visible{background:var(--paper);}
   .opt.on{color:var(--accent-deep);font-weight:600;}
   .opt.on::after{content:'✓';}
   .opt.back{color:var(--ink-soft);font-size:14px;}
@@ -160,7 +157,6 @@
     background:var(--paper);color:var(--ink-soft);font-size:15px;line-height:1;cursor:pointer;
     display:inline-flex;align-items:center;justify-content:center;
   }
-  .chip button:hover{background:var(--paper-line);}
 
   .meta{
     margin:18px 4px 12px;min-height:18px;
@@ -191,7 +187,6 @@
   .value.mono{font-family:'IBM Plex Mono',monospace;font-size:14px;}
   .value.empty{color:var(--ink-faint);}
   .value a{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--paper-line);}
-  .value a:hover{border-bottom-color:var(--accent);}
 
   .none{
     padding:36px 10px;text-align:center;color:var(--ink-soft);font-size:15px;line-height:1.5;
@@ -202,7 +197,6 @@
     background:transparent;border:1.5px solid var(--ink);color:var(--ink);
     padding:9px 18px;border-radius:999px;cursor:pointer;
   }
-  .more-btn:hover{background:var(--ink);color:var(--bg);}
 
   .setup-banner{
     background:#FBF6E9;border:1px solid #E8DDB0;border-radius:10px;
@@ -221,6 +215,18 @@
      Extra rules: 3-column card details from 640 px, bigger touch targets on
      touch screens, short landscape screens, notches (safe-area), tiny phones.
      ===================================================================== */
+
+  /* hover effects only where a real mouse exists (on touch screens hover can stay "stuck" after a tap) */
+  @media (hover:hover){
+    button.refresh:hover{background:var(--ink);color:var(--bg);}
+    .langbtn:hover{background:rgba(255,97,21,.22);}
+    .plus:hover{background:var(--paper-line);}
+    .clear:hover{background:var(--paper-line);}
+    .opt:hover{background:var(--paper);}
+    .chip button:hover{background:var(--paper-line);}
+    .value a:hover{border-bottom-color:var(--accent);}
+    .more-btn:hover{background:var(--ink);color:var(--bg);}
+  }
 
   /* card details: 3 columns once the card is wide enough */
   @media (min-width:640px){
@@ -352,7 +358,7 @@
     <h1>Find a customer</h1>
     <div class="searchwrap">
       <div class="searchbox" id="searchbox">
-        <input id="q" type="text" placeholder="Search by customer name" aria-label="Search customers by name"
+        <input id="q" type="text" placeholder="Search by name or alternate name" aria-label="Search customers by name or alternate name"
                autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
                enterkeyhint="search" inputmode="search" autofocus>
         <button class="clear" id="clearBtn" type="button" aria-label="Clear search">×</button>
@@ -376,33 +382,34 @@
   // 1) Paste your deployed Apps Script Web app URL below.
   //    Leave blank to try the page with built-in demo data.
   // ============================================================
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdZbQpZlIo4DLsv449D6TijeoJ8i2Ubka3pDY-9jvEUEgXi614XgCvGpZ2o0lFEuto/exec";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
+  const SCRIPT_URL = "";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
 
-  const NAME_COL     = "cust_name";   // the sheet column that is searched
+  const NAME_COL     = "cust_name";   // main name column (searched, and shown as the card heading)
   const AREA_COL     = "area";        // first filter (the + button)
   const SUB_COL      = "sub_area";    // second filter, offered after an area is chosen
+  const ALT_COL      = "alt_name";    // alternate name: searched together with cust_name
   const DEFAULT_LANG = "te";          // page opens in Telugu ("en" for English)
 
   // English column → its Telugu column. In Telugu mode the Telugu value is shown
   // (English is used if the Telugu cell is empty). The Telugu columns are never
   // shown as separate fields.
-  const TRANSLATED = { cust_name:"cust_name_te", area:"area_te", sub_area:"sub_area_te", notes:"notes_te" };
+  const TRANSLATED = { cust_name:"cust_name_te", area:"area_te", sub_area:"sub_area_te", alt_name:"alt_name_te" };
   const HIDDEN_COLS = ["connection_date"];   // columns that are never shown
 
   const PAGE_SIZE  = 30;            // cards drawn at a time
   const REFRESH_MS = 5 * 60 * 1000; // quietly re-check the sheet every 5 minutes
 
   const DEMO = {
-    headers: ["cust_id","cust_name","cust_name_te","phone","area","area_te","sub_area","sub_area_te","pack_name","pack_price","notes","notes_te"],
+    headers: ["cust_id","cust_name","cust_name_te","phone","area","area_te","sub_area","sub_area_te","pack_name","pack_price","alt_name","alt_name_te"],
     updated: 0,
     rows: [
-      ["C0001","Ravi Kumar","రవి కుమార్","9876543210","Gandhi Nagar","గాంధీ నగర్","Temple Street","గుడి వీధి","Gold Package","4999","",""],
-      ["C0002","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapeta","కొత్తపేట","Market Lane","మార్కెట్ సందు","Silver Package","2999","Prefers evening visits","సాయంత్రం రావడం ఇష్టం"],
+      ["C0001","Ravi Kumar","రవి కుమార్","9876543210","Gandhi Nagar","గాంధీ నగర్","Temple Street","గుడి వీధి","Gold Package","4999","Ravi Tailors","రవి టైలర్స్"],
+      ["C0002","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapeta","కొత్తపేట","Market Lane","మార్కెట్ సందు","Silver Package","2999","Raju","రాజు"],
       ["C0003","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Gandhi Nagar","గాంధీ నగర్","Park Road","పార్క్ రోడ్","Basic Package","1499","",""],
-      ["C0004","Venkata Ramana Rao","వెంకట రమణ రావు","9000011122","Main Road","మెయిన్ రోడ్","Bank Street","బ్యాంక్ వీధి","Platinum Package","7999","Static IP","స్టాటిక్ ఐపీ"],
-      ["C0005","Suresh Babu","సురేష్ బాబు","9345612780","Kothapeta","కొత్తపేట","Church Street","చర్చి వీధి","Silver Package","2999","",""],
+      ["C0004","Venkata Ramana Rao","వెంకట రమణ రావు","9000011122","Main Road","మెయిన్ రోడ్","Bank Street","బ్యాంక్ వీధి","Platinum Package","7999","Sri Sai Traders","శ్రీ సాయి ట్రేడర్స్"],
+      ["C0005","Suresh Babu","సురేష్ బాబు","9345612780","Kothapeta","కొత్తపేట","Church Street","చర్చి వీధి","Silver Package","2999","Chinna","చిన్న"],
       ["C0006","Priya Chowdary","ప్రియ చౌదరి","9700012345","Gandhi Nagar","గాంధీ నగర్","Temple Street","గుడి వీధి","Gold Package","4999","",""],
-      ["C0007","Kiran Kumar","కిరణ్ కుమార్","9811122233","Main Road","మెయిన్ రోడ్","Petrol Bunk","పెట్రోల్ బంక్","Basic Package","1499","Router replaced","రూటర్ మార్చారు"],
+      ["C0007","Kiran Kumar","కిరణ్ కుమార్","9811122233","Main Road","మెయిన్ రోడ్","Petrol Bunk","పెట్రోల్ బంక్","Basic Package","1499","Kiran Medicals","కిరణ్ మెడికల్స్"],
       ["C0008","Anitha Sharma","అనిత శర్మ","9922233344","Kothapeta","కొత్తపేట","Market Lane","మార్కెట్ సందు","Silver Package","2999","",""]
     ]
   };
@@ -410,9 +417,9 @@
   // Field labels. In Telugu mode only these three change (the other labels stay English).
   const LABELS = {
     cust_id:"Customer ID", cust_name:"Name", phone:"Phone",
-    area:"Area", sub_area:"Sub area", pack_name:"Package", pack_price:"Price", notes:"Notes"
+    area:"Area", sub_area:"Sub area", pack_name:"Package", pack_price:"Price", alt_name:"Alternate name"
   };
-  const LABELS_TE = { area:"ప్రాంతం", sub_area:"ఉప ప్రాంతం", notes:"గమనికలు" };
+  const LABELS_TE = { area:"ప్రాంతం", sub_area:"ఉప ప్రాంతం", alt_name:"ప్రత్యామ్నాయ పేరు" };
 
   // Words used in the + menu and filter chips
   const UI = {
@@ -426,8 +433,9 @@
   //  SEARCH CORE — the part that makes it fast. No DOM in here.
   //  * The whole list is already in memory, so nothing is sent to the server
   //    while you type.
-  //  * Each customer is indexed once as "english name + telugu name", so a
-  //    search in English OR Telugu finds the same customer, in either language.
+  //  * Each customer is indexed once with ALL their names (name, Telugu name,
+  //    alternate name, Telugu alternate name), so a search in English OR Telugu,
+  //    by name OR alternate name, finds the same customer.
   //  * Rows are sorted A→Z once (by the name shown in the current language).
   //  * Each keystroke is one pass of String.indexOf over plain strings.
   //  * Picking an area / sub area builds a short list ("base") once; every
@@ -438,27 +446,47 @@
   //    sorting is needed at search time.
   // =====================================================================
   // <search-core>
-  let hay = [];             // normalized "english telugu" names, sorted A→Z
-  let teOff = [];           // where the Telugu part starts inside hay[i] (-1 = none)
+  let hay = [];             // normalized names of each customer joined by spaces, sorted A→Z
+  let offs = new Int32Array(0), stride = 1;   // where each name starts inside hay[i] (-1 = none)
   let base = null;          // null = all customers, else the row positions allowed by the area filter
   let lastQ = '', lastCand = null;
 
+  const ASCII = /^[\x00-\x7f]*$/;
   function norm(s){
-    return String(s).normalize('NFC').toLowerCase()
+    s = String(s);
+    if (ASCII.test(s)) return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();   // fast path: plain English
+    return s.normalize('NFC').toLowerCase()
       .replace(/[\u200c\u200d]/g, '')                    // invisible joiners in Telugu typing
       .replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ').trim();
   }
 
   // Normalizes + sorts rows by name and builds the lookup arrays. Returns the sorted rows.
-  // teIdx = column of the Telugu name (-1 if none); lang decides which name the rows are sorted by.
-  function buildIndex(rows, nameIdx, teIdx, lang){
+  //   nameIdx = main name column, teIdx = its Telugu column (-1 if none)
+  //   extra   = other columns to search too, e.g. [altIdx, altTeIdx] (-1 entries are ignored)
+  //   lang    = which name the rows are sorted by ('te' → Telugu name when there is one)
+  function buildIndex(rows, nameIdx, teIdx, lang, extra){
+    const cols = [nameIdx, teIdx].concat(extra || []);
+    stride = cols.length;
+    const n = rows.length;
     const recs = rows.map(r => {
-      const en = norm(r[nameIdx] || ''), te = teIdx >= 0 ? norm(r[teIdx] || '') : '';
-      return { r, en, te, k: (lang === 'te' && te) ? te : en };
+      const parts = cols.map(c => c >= 0 ? norm(r[c] || '') : '');
+      return { r, parts, k: (lang === 'te' && parts[1]) ? parts[1] : parts[0] };
     });
     recs.sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);
-    hay   = recs.map(x => x.te ? x.en + ' ' + x.te : x.en);
-    teOff = recs.map(x => x.te ? x.en.length + 1 : -1);
+    hay = new Array(n);
+    offs = new Int32Array(n * stride).fill(-1);
+    for (let i = 0; i < n; i++){
+      const parts = recs[i].parts;
+      let s = '';
+      for (let j = 0; j < stride; j++){
+        const p = parts[j];
+        if (!p) continue;
+        if (s) s += ' ';
+        offs[i * stride + j] = s.length;
+        s += p;
+      }
+      hay[i] = s;
+    }
     base = null; lastQ = ''; lastCand = null;
     return recs.map(x => x.r);
   }
@@ -486,7 +514,18 @@
       }
       if (!ok) continue;
       cand.push(idx);
-      if (h.startsWith(q) || (teOff[idx] > 0 && h.startsWith(q, teOff[idx]))){ b0.push(idx); continue; }
+
+      // best bucket: the text typed is the START of any one of the customer's names
+      let starts = h.startsWith(q);
+      if (!starts){
+        const o = idx * stride;
+        for (let j = 1; j < stride; j++){
+          const p = offs[o + j];
+          if (p > 0 && h.startsWith(q, p)){ starts = true; break; }
+        }
+      }
+      if (starts){ b0.push(idx); continue; }
+
       let wordStart = true;
       for (let t = 0; t < toks.length; t++){
         if (!(h.startsWith(toks[t]) || h.indexOf(sp[t]) !== -1)){ wordStart = false; break; }
@@ -510,7 +549,7 @@
 
   let lang = DEFAULT_LANG;
   let headers = [], headersLow = [], rawRows = [], data = [];
-  let nameIdx = -1, areaIdx = -1, subIdx = -1;
+  let nameIdx = -1, areaIdx = -1, subIdx = -1, altIdx = -1;
   let colKind = [], teIdxOf = [], hiddenCol = [];
   let ready = false, loadedStamp = null;
   let results = [], shown = 0, curRe = null;
@@ -567,6 +606,7 @@
     headers = h; headersLow = low; nameIdx = ni;
     areaIdx = low.indexOf(AREA_COL);
     subIdx  = low.indexOf(SUB_COL);
+    altIdx  = low.indexOf(ALT_COL);
     teIdxOf = low.map(k => TRANSLATED[k] ? low.indexOf(TRANSLATED[k]) : -1);
     const teCols = Object.values(TRANSLATED);
     hiddenCol = low.map(k => HIDDEN_COLS.includes(k) || teCols.includes(k));
@@ -586,7 +626,8 @@
   // Sorts + indexes the rows for the current language, rebuilds the area lists.
   // Runs when the sheet loads and whenever the language is switched.
   function rebuild(){
-    data = buildIndex(rawRows, nameIdx, teIdxOf[nameIdx], lang);
+    // search the name AND the alternate name (English + Telugu of each)
+    data = buildIndex(rawRows, nameIdx, teIdxOf[nameIdx], lang, [altIdx, altIdx >= 0 ? teIdxOf[altIdx] : -1]);
     buildAreas();
     renderChips();
     if (panelOpen) renderPanel();
@@ -687,6 +728,18 @@
     if (el) el.focus({ preventScroll:false });
   }
 
+  // Dropdown (tablet / desktop): never taller than the space left below the search bar.
+  // On phones the menu is a bottom sheet sized by CSS, so nothing to do there.
+  function fitPanel(){
+    if (!panelOpen) return;
+    if (getComputedStyle(panel).position !== 'absolute'){ panel.style.maxHeight = ''; return; }
+    const r = document.querySelector('.searchwrap').getBoundingClientRect();
+    let avail = window.innerHeight - r.bottom - 20;
+    if (avail < 200){ window.scrollBy(0, 200 - avail); avail = 200; }   // bring the menu into view
+    panel.style.maxHeight = Math.min(400, avail) + 'px';
+  }
+  window.addEventListener('resize', fitPanel);
+
   function openPanel(){
     pendArea = selArea; pendSub = selSub;
     panelStep = (pendArea && (subByArea.get(pendArea) || []).length) ? 'sub' : 'area';
@@ -695,6 +748,7 @@
     panel.hidden = false;
     document.body.classList.add('menu-open');
     plusBtn.setAttribute('aria-expanded', 'true');
+    fitPanel();
     focusPanel();
   }
   function closePanel(){
@@ -773,13 +827,13 @@
   }
 
   function fieldHtml(i, v){
-    const wide = headersLow[i] === 'notes' || v.length > 40;
+    const wide = v.length > 40;
     let val;
     if (v === '') val = '<div class="value empty">—</div>';
     else if (colKind[i] === 'price') val = '<div class="value mono">' + fmtPrice(v) + '</div>';
     else if (colKind[i] === 'phone') val = '<div class="value mono"><a href="tel:' + esc(v.replace(/[^\d+]/g, '')) + '">' + esc(v) + '</a></div>';
     else if (colKind[i] === 'mono') val = '<div class="value mono">' + esc(v) + '</div>';
-    else val = '<div class="value">' + esc(v) + '</div>';
+    else val = '<div class="value">' + (i === altIdx ? highlight(v) : esc(v)) + '</div>';   // alt name: show what matched
     return '<div class="field' + (wide ? ' wide' : '') + '"><div class="label">' + esc(labelFor(i)) + '</div>' + val + '</div>';
   }
 
