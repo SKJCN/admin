@@ -1,73 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="te">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SKJCN - Customer Search</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Noto+Sans+Telugu:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#F6F3EC;
+    --bg:#fffcf4;          /* page background */
+    --paper:#F6F1E4;       /* soft hover / button surface */
     --paper-line:#DCD5C3;
     --card:#FFFDF8;
     --ink:#232323;
     --ink-soft:#5B564B;
     --ink-faint:#8E8878;
-    --teal:#0F5E56;
-    --teal-deep:#0A413C;
-    --paid-green:#1E7D4F;
+    --accent:#ff6115;       /* headings + highlights */
+    --accent-deep:#C2410C;  /* same hue, darker, for small text */
     --unpaid-red:#B23A2E;
   }
   *{box-sizing:border-box;}
   [hidden]{display:none !important;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
   body{
     margin:0;
-    background:var(--paper);
+    background:var(--bg);
     color:var(--ink);
     font-family:'Inter','Noto Sans Telugu',sans-serif;
-    min-height:100vh;
+    min-height:100vh;min-height:100dvh;
   }
+  button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 
   /* ---------- top bar ---------- */
   .topbar{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:16px 22px;gap:12px;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+    gap:10px 12px;
+    padding:calc(16px + env(safe-area-inset-top,0px)) max(22px,env(safe-area-inset-right,0px)) 16px max(22px,env(safe-area-inset-left,0px));
   }
-  .brand{font-family:'Fraunces',serif;font-weight:600;font-size:18px;}
+  .brand{font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--accent);}
   .right{display:flex;align-items:center;gap:12px;}
   .status{
     font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);
-    text-align:right;
+    text-align:right;line-height:1.4;
   }
   .status .dot{
     display:inline-block;width:7px;height:7px;border-radius:50%;
     background:#9a9584;margin-right:6px;
   }
-  .status.live .dot{background:var(--teal);}
+  .status.live .dot{background:var(--accent);}
   .status.error .dot{background:var(--unpaid-red);}
   button.refresh{
     font-size:16px;background:transparent;border:2px solid var(--ink);color:var(--ink);
     width:32px;height:32px;padding:0;border-radius:6px;cursor:pointer;
     display:inline-flex;align-items:center;justify-content:center;line-height:1;
   }
-  button.refresh:hover{background:var(--ink);color:var(--paper);}
+  button.refresh:hover{background:var(--ink);color:var(--bg);}
+
+  /* language switch: shows the language you will switch to, like a dark / light toggle */
+  .langbtn{
+    display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px 0 10px;
+    border:1.5px solid var(--accent);border-radius:999px;
+    background:rgba(255,97,21,.12);color:var(--accent-deep);
+    font:inherit;font-size:14px;font-weight:600;line-height:1;cursor:pointer;
+    transition:background .15s ease;
+  }
+  .langbtn:hover{background:rgba(255,97,21,.22);}
+  .langbtn svg{width:18px;height:18px;flex:none;}
 
   /* ---------- search ---------- */
-  main{max-width:720px;margin:0 auto;padding:0 20px 90px;}
+  main{
+    max-width:720px;margin:0 auto;
+    padding:0 max(20px,env(safe-area-inset-right,0px)) calc(90px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));
+  }
 
-  .hero{padding-top:19vh;transition:padding-top .28s ease;}
+  .hero{padding-top:19vh;padding-top:clamp(28px,18dvh,170px);transition:padding-top .28s ease;}
   .has-query .hero{padding-top:6px;}
   .hero h1{
     font-family:'Fraunces',serif;font-weight:600;font-size:36px;line-height:1.15;
+    color:var(--accent);
     text-align:center;margin:0 0 24px;max-height:60px;overflow:hidden;
     transition:opacity .2s ease, max-height .28s ease, margin .28s ease;
   }
   .has-query .hero h1{opacity:0;max-height:0;margin:0;}
 
+  .searchwrap{position:relative;}
   .searchbox{
     display:flex;align-items:center;height:58px;
-    padding:0 10px 0 20px;
+    padding:0 10px 0 22px;
     background:#fff;
     border:1px solid var(--paper-line);
     border-radius:999px;
@@ -75,17 +94,27 @@
     transition:border-color .15s ease, box-shadow .15s ease;
   }
   .searchbox:focus-within{
-    border-color:var(--teal);
-    box-shadow:0 0 0 3px rgba(15,94,86,.16), 0 2px 14px rgba(35,35,35,.08);
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(255,97,21,.16), 0 2px 14px rgba(35,35,35,.08);
   }
-  .searchbox .ico{width:20px;height:20px;flex:none;color:var(--ink-soft);}
   .searchbox input{
     flex:1;min-width:0;height:100%;
     border:0;outline:0;background:transparent;
     font:inherit;font-size:17px;color:var(--ink);
-    padding:0 12px;
+    padding:0 8px 0 0;
   }
   .searchbox input::placeholder{color:var(--ink-faint);}
+
+  .plus{
+    width:40px;height:40px;flex:none;padding:0;
+    border:0;border-radius:50%;background:transparent;color:var(--ink-soft);cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:background .15s ease, color .15s ease;
+  }
+  .plus svg{width:22px;height:22px;}
+  .plus:hover,.plus[aria-expanded="true"]{background:var(--paper-line);}
+  .plus.on{background:rgba(255,97,21,.14);color:var(--accent-deep);}
+
   .clear{
     display:none;width:34px;height:34px;flex:none;
     border:0;border-radius:50%;background:var(--paper);color:var(--ink-soft);
@@ -93,7 +122,45 @@
     align-items:center;justify-content:center;
   }
   .clear:hover{background:var(--paper-line);}
-  .has-query .clear{display:inline-flex;}
+  .has-text .clear{display:inline-flex;}
+
+  /* area / sub area menu: a dropdown under the + (tablet, desktop); a bottom sheet on phones */
+  .scrim{display:none;}
+  .panel{
+    position:absolute;right:0;top:calc(100% + 8px);z-index:30;
+    width:min(340px,100%);
+    max-height:min(56vh,400px);max-height:min(56dvh,400px);
+    overflow-y:auto;overscroll-behavior:contain;
+    background:#fff;border:1px solid var(--paper-line);border-radius:16px;
+    box-shadow:0 10px 32px rgba(35,35,35,.16);
+    padding:6px;text-align:left;
+  }
+  .panel-title{font-size:12.5px;color:var(--ink-soft);padding:8px 12px 6px;line-height:1.5;}
+  .opt{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    width:100%;text-align:left;border:0;background:transparent;
+    font:inherit;font-size:15px;line-height:1.5;color:var(--ink);
+    padding:9px 12px;border-radius:10px;cursor:pointer;
+    touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  }
+  .opt:hover,.opt:focus-visible{background:var(--paper);}
+  .opt.on{color:var(--accent-deep);font-weight:600;}
+  .opt.on::after{content:'✓';}
+  .opt.back{color:var(--ink-soft);font-size:14px;}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 4px 0;}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;max-width:100%;
+    background:var(--card);border:1px solid var(--paper-line);border-radius:999px;
+    padding:4px 5px 4px 12px;font-size:13.5px;line-height:1.5;overflow-wrap:anywhere;
+  }
+  .chip .k{color:var(--ink-soft);}
+  .chip button{
+    width:22px;height:22px;flex:none;border:0;border-radius:50%;padding:0;
+    background:var(--paper);color:var(--ink-soft);font-size:15px;line-height:1;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .chip button:hover{background:var(--paper-line);}
 
   .meta{
     margin:18px 4px 12px;min-height:18px;
@@ -109,28 +176,22 @@
     margin-bottom:12px;
   }
   .card-head{
-    display:flex;justify-content:space-between;align-items:center;gap:12px;
     padding-bottom:12px;margin-bottom:14px;
     border-bottom:1px solid var(--paper-line);
   }
-  .card-name{font-size:20px;font-weight:600;line-height:1.25;}
-  mark{background:rgba(15,94,86,.18);color:inherit;border-radius:3px;padding:0 1px;}
-  .pill{
-    flex:none;font-size:12.5px;font-weight:500;
-    border:1px solid currentColor;border-radius:999px;padding:3px 11px;
-  }
-  .pill.ok{color:var(--paid-green);}
-  .pill.bad{color:var(--unpaid-red);}
+  .card-name{font-size:20px;font-weight:600;line-height:1.4;color:var(--accent);overflow-wrap:anywhere;}
+  .card-name mark{color:var(--accent-deep);}
+  mark{background:rgba(255,97,21,.18);color:inherit;border-radius:3px;padding:0 1px;}
 
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;}
   .field{min-width:0;}
   .field.wide{grid-column:1 / -1;}
-  .label{font-size:12.5px;color:var(--ink-soft);margin-bottom:2px;}
-  .value{font-size:15px;line-height:1.4;overflow-wrap:anywhere;}
+  .label{font-size:12.5px;color:var(--ink-soft);margin-bottom:2px;line-height:1.5;}
+  .value{font-size:15px;line-height:1.5;overflow-wrap:anywhere;}
   .value.mono{font-family:'IBM Plex Mono',monospace;font-size:14px;}
   .value.empty{color:var(--ink-faint);}
-  .value a{color:var(--teal-deep);text-decoration:none;border-bottom:1px solid var(--paper-line);}
-  .value a:hover{border-bottom-color:var(--teal);}
+  .value a{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--paper-line);}
+  .value a:hover{border-bottom-color:var(--accent);}
 
   .none{
     padding:36px 10px;text-align:center;color:var(--ink-soft);font-size:15px;line-height:1.5;
@@ -141,7 +202,7 @@
     background:transparent;border:1.5px solid var(--ink);color:var(--ink);
     padding:9px 18px;border-radius:999px;cursor:pointer;
   }
-  .more-btn:hover{background:var(--ink);color:var(--paper);}
+  .more-btn:hover{background:var(--ink);color:var(--bg);}
 
   .setup-banner{
     background:#FBF6E9;border:1px solid #E8DDB0;border-radius:10px;
@@ -149,28 +210,132 @@
   }
   .setup-banner code{background:#F0E9D2;padding:2px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
 
-  :focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .searchbox input:focus-visible{outline:none;}
+
+  /* =====================================================================
+     RESPONSIVE
+       phone    up to 560 px   bottom-sheet menu, 2-column card details
+       tablet   561–1024 px    larger type and spacing, wider column
+       desktop  1025 px and up the base styles above
+     Extra rules: 3-column card details from 640 px, bigger touch targets on
+     touch screens, short landscape screens, notches (safe-area), tiny phones.
+     ===================================================================== */
+
+  /* card details: 3 columns once the card is wide enough */
+  @media (min-width:640px){
+    .grid{grid-template-columns:repeat(3,1fr);}
+  }
+
+  /* tablet */
+  @media (min-width:561px) and (max-width:1024px){
+    .topbar{padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:18px;
+            padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));}
+    .brand{font-size:20px;}
+    main{max-width:780px;}
+    .hero h1{font-size:40px;max-height:68px;}
+    .searchbox{height:62px;padding-left:26px;}
+    .searchbox input{font-size:18px;}
+    .panel{width:min(380px,100%);}
+    .opt{font-size:16px;padding:11px 14px;}
+    .chip{font-size:14.5px;}
+    .card{padding:20px 24px 22px;}
+    .card-name{font-size:22px;}
+    .value{font-size:16px;}
+    .label{font-size:13px;}
+  }
+
+  /* phone */
   @media (max-width:560px){
-    .topbar{padding:12px 16px;}
-    main{padding:0 14px 80px;}
-    .hero{padding-top:14vh;}
+    .right{gap:8px;}
+    .langbtn{height:32px;padding:0 11px 0 8px;font-size:13px;}
+    main{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));}
     .hero h1{font-size:30px;}
-    .searchbox{height:54px;padding-left:16px;}
+    .searchbox{height:54px;}
     .searchbox input{font-size:16px;}   /* 16px stops iPhone auto-zoom */
     .card{padding:14px 14px 16px;}
     .grid{gap:12px 16px;}
-    .status{max-width:150px;font-size:11px;}
+
+    /* the area menu becomes a sheet that slides up from the bottom */
+    .scrim{
+      display:block;position:fixed;inset:0;z-index:25;background:rgba(35,35,35,.38);
+      opacity:0;pointer-events:none;transition:opacity .2s ease;
+    }
+    body.menu-open .scrim{opacity:1;pointer-events:auto;}
+    body.menu-open{overflow:hidden;}
+    .panel{
+      position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;z-index:30;
+      max-height:72vh;max-height:72dvh;
+      border-radius:20px 20px 0 0;border-width:1px 0 0;
+      box-shadow:0 -12px 36px rgba(35,35,35,.22);
+      padding:8px max(8px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));
+      animation:sheet-up .22s ease;
+    }
+    .opt{font-size:16px;padding:12px 14px;}
+    .panel-title{font-size:13px;padding:10px 14px 6px;}
   }
+  @keyframes sheet-up{from{transform:translateY(28px);opacity:0;}to{transform:none;opacity:1;}}
+
+  /* small phones: put the status on its own line under brand / language / reload */
+  @media (max-width:440px){
+    .topbar{padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:10px;
+            padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+            row-gap:8px;}
+    .right{display:contents;}
+    .brand{margin-right:auto;}
+    .status{order:5;flex:1 0 100%;text-align:left;font-size:11.5px;}
+  }
+
+  /* very small phones (320–360 px) */
+  @media (max-width:360px){
+    .hero h1{font-size:26px;}
+    .card{padding:12px 12px 14px;}
+    .card-name{font-size:18px;}
+    .grid{gap:10px 12px;}
+    .searchbox{padding-left:16px;}
+  }
+
+  /* short landscape screens (phones turned sideways): save vertical space */
+  @media (max-height:500px) and (orientation:landscape){
+    .hero{padding-top:18px;}
+    .hero h1{font-size:26px;margin-bottom:14px;max-height:40px;}
+    .searchbox{height:50px;}
+    .topbar{padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:8px;}
+    .panel{max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);}
+  }
+  @media (max-width:560px) and (max-height:500px) and (orientation:landscape){
+    .panel{max-height:80vh;max-height:80dvh;}
+  }
+
+  /* touch screens: comfortable 44 px tap targets */
+  @media (pointer:coarse){
+    .langbtn{height:44px;padding:0 15px 0 12px;font-size:14px;}
+    button.refresh{width:44px;height:44px;border-radius:10px;}
+    .plus{width:44px;height:44px;}
+    .clear{width:40px;height:40px;}
+    .opt{min-height:46px;}
+    .chip{padding:5px 6px 5px 14px;}
+    .chip button{width:30px;height:30px;font-size:17px;}
+    .more-btn{padding:13px 24px;font-size:13.5px;}
+    .searchbox{min-height:56px;}
+  }
+
   @media (prefers-reduced-motion:reduce){
-    *{transition:none !important;}
+    *{transition:none !important;animation:none !important;}
   }
 </style>
 </head>
 <body>
 
+<div class="scrim" id="scrim"></div>
+
 <div class="topbar">
   <div class="brand">SKJCN</div>
   <div class="right">
+    <button class="langbtn" id="langBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+      <span id="langText">English</span>
+    </button>
     <div class="status" id="status"><span class="dot"></span><span id="statusText">connecting…</span></div>
     <button class="refresh" id="refreshBtn" aria-label="Reload customer list" title="Reload customer list">↻</button>
   </div>
@@ -185,18 +350,22 @@
 
   <section class="hero">
     <h1>Find a customer</h1>
-    <div class="searchbox">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/>
-        <path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-      <input id="q" type="text" placeholder="Search by customer name" aria-label="Search customers by name"
-             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
-             enterkeyhint="search" inputmode="search" autofocus>
-      <button class="clear" id="clearBtn" type="button" aria-label="Clear search">×</button>
+    <div class="searchwrap">
+      <div class="searchbox" id="searchbox">
+        <input id="q" type="text" placeholder="Search by customer name" aria-label="Search customers by name"
+               autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+               enterkeyhint="search" inputmode="search" autofocus>
+        <button class="clear" id="clearBtn" type="button" aria-label="Clear search">×</button>
+        <button class="plus" id="plusBtn" type="button" aria-haspopup="true" aria-expanded="false"
+                aria-controls="panel" aria-label="Filter by area" title="Filter by area">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="panel" id="panel" hidden></div>
     </div>
   </section>
 
+  <div class="chips" id="chips" hidden></div>
   <div class="meta" id="meta" aria-live="polite"></div>
   <div id="results"></div>
   <div class="more-wrap"><button class="more-btn" id="moreBtn" type="button" hidden></button></div>
@@ -207,68 +376,104 @@
   // 1) Paste your deployed Apps Script Web app URL below.
   //    Leave blank to try the page with built-in demo data.
   // ============================================================
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdZbQpZlIo4DLsv449D6TijeoJ8i2Ubka3pDY-9jvEUEgXi614XgCvGpZ2o0lFEuto/exec";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
+  const SCRIPT_URL = "";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
 
-  const NAME_COL   = "cust_name";   // the sheet column that is searched
+  const NAME_COL     = "cust_name";   // the sheet column that is searched
+  const AREA_COL     = "area";        // first filter (the + button)
+  const SUB_COL      = "sub_area";    // second filter, offered after an area is chosen
+  const DEFAULT_LANG = "te";          // page opens in Telugu ("en" for English)
+
+  // English column → its Telugu column. In Telugu mode the Telugu value is shown
+  // (English is used if the Telugu cell is empty). The Telugu columns are never
+  // shown as separate fields.
+  const TRANSLATED = { cust_name:"cust_name_te", area:"area_te", sub_area:"sub_area_te", notes:"notes_te" };
+  const HIDDEN_COLS = ["connection_date"];   // columns that are never shown
+
   const PAGE_SIZE  = 30;            // cards drawn at a time
   const REFRESH_MS = 5 * 60 * 1000; // quietly re-check the sheet every 5 minutes
 
   const DEMO = {
-    headers: ["cust_id","cust_name","phone","alt_phone","address","area","pack_name","pack_price","connection_date","status","notes"],
+    headers: ["cust_id","cust_name","cust_name_te","phone","area","area_te","sub_area","sub_area_te","pack_name","pack_price","notes","notes_te"],
     updated: 0,
     rows: [
-      ["C0001","Ravi Kumar","9876543210","","12-4/1, 1st Cross, Gandhi Nagar","Gandhi Nagar","Gold Package","4999","05-Jan-2024","Active",""],
-      ["C0002","Ravi Teja Reddy","9876501234","9123456780","7-22, Temple Street","Kothapeta","Silver Package","2999","11-Mar-2023","Active","Prefers evening visits"],
-      ["C0003","Sri Lakshmi Naidu","9988776655","","33-1/2, Park Road","Park Road","Basic Package","1499","19-Aug-2025","Inactive",""],
-      ["C0004","Venkata Ramana Rao","9000011122","9000033344","5-9, Bus Stand Road","Main Road","Platinum Package","7999","02-Feb-2022","Active","Static IP"],
-      ["C0005","Suresh Babu","9345612780","","18-7/3, Railway Colony","Railway Colony","Silver Package","2999","27-Jun-2025","Suspended","Payment pending"],
-      ["C0006","Priya Chowdary","9700012345","","44, Ashok Nagar","Ashok Nagar","Gold Package","4999","14-Nov-2023","Active",""],
-      ["C0007","Kiran Kumar","9811122233","","9-3, Market Yard","Market Yard","Basic Package","1499","08-Apr-2026","Active","Router replaced"],
-      ["C0008","Anitha Sharma","9922233344","","61-2, Indira Colony","Indira Colony","Silver Package","2999","30-Sep-2024","Active",""]
+      ["C0001","Ravi Kumar","రవి కుమార్","9876543210","Gandhi Nagar","గాంధీ నగర్","Temple Street","గుడి వీధి","Gold Package","4999","",""],
+      ["C0002","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapeta","కొత్తపేట","Market Lane","మార్కెట్ సందు","Silver Package","2999","Prefers evening visits","సాయంత్రం రావడం ఇష్టం"],
+      ["C0003","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Gandhi Nagar","గాంధీ నగర్","Park Road","పార్క్ రోడ్","Basic Package","1499","",""],
+      ["C0004","Venkata Ramana Rao","వెంకట రమణ రావు","9000011122","Main Road","మెయిన్ రోడ్","Bank Street","బ్యాంక్ వీధి","Platinum Package","7999","Static IP","స్టాటిక్ ఐపీ"],
+      ["C0005","Suresh Babu","సురేష్ బాబు","9345612780","Kothapeta","కొత్తపేట","Church Street","చర్చి వీధి","Silver Package","2999","",""],
+      ["C0006","Priya Chowdary","ప్రియ చౌదరి","9700012345","Gandhi Nagar","గాంధీ నగర్","Temple Street","గుడి వీధి","Gold Package","4999","",""],
+      ["C0007","Kiran Kumar","కిరణ్ కుమార్","9811122233","Main Road","మెయిన్ రోడ్","Petrol Bunk","పెట్రోల్ బంక్","Basic Package","1499","Router replaced","రూటర్ మార్చారు"],
+      ["C0008","Anitha Sharma","అనిత శర్మ","9922233344","Kothapeta","కొత్తపేట","Market Lane","మార్కెట్ సందు","Silver Package","2999","",""]
     ]
   };
 
+  // Field labels. In Telugu mode only these three change (the other labels stay English).
   const LABELS = {
-    cust_id:"Customer ID", cust_name:"Name", phone:"Phone", alt_phone:"Alternate phone",
-    address:"Address", area:"Area", pack_name:"Package", pack_price:"Price",
-    connection_date:"Connected since", status:"Status", notes:"Notes"
+    cust_id:"Customer ID", cust_name:"Name", phone:"Phone",
+    area:"Area", sub_area:"Sub area", pack_name:"Package", pack_price:"Price", notes:"Notes"
+  };
+  const LABELS_TE = { area:"ప్రాంతం", sub_area:"ఉప ప్రాంతం", notes:"గమనికలు" };
+
+  // Words used in the + menu and filter chips
+  const UI = {
+    te: { area:"ప్రాంతం", sub:"ఉప ప్రాంతం", all:"అన్ని ప్రాంతాలు", change:"‹ ప్రాంతం మార్చు",
+          subIn: a => "ఉప ప్రాంతం: " + a, allOf: a => "మొత్తం " + a, none:"ప్రాంతాలు కనిపించలేదు" },
+    en: { area:"Area", sub:"Sub area", all:"All areas", change:"‹ Change area",
+          subIn: a => "Sub area in " + a, allOf: a => "All of " + a, none:"No areas found in the sheet." }
   };
 
   // =====================================================================
   //  SEARCH CORE — the part that makes it fast. No DOM in here.
   //  * The whole list is already in memory, so nothing is sent to the server
   //    while you type.
-  //  * Names are lower-cased ONCE and sorted A→Z when the list loads.
+  //  * Each customer is indexed once as "english name + telugu name", so a
+  //    search in English OR Telugu finds the same customer, in either language.
+  //  * Rows are sorted A→Z once (by the name shown in the current language).
   //  * Each keystroke is one pass of String.indexOf over plain strings.
+  //  * Picking an area / sub area builds a short list ("base") once; every
+  //    search after that only looks inside that list.
   //  * While you keep typing the same name ("ra" → "rav" → "ravi"), only the
   //    previous matches are re-checked, so every extra letter is cheaper.
   //  * Results are bucketed (starts-with → word-starts-with → contains), so no
   //    sorting is needed at search time.
   // =====================================================================
   // <search-core>
-  let hay = [];             // normalized names, sorted A→Z
+  let hay = [];             // normalized "english telugu" names, sorted A→Z
+  let teOff = [];           // where the Telugu part starts inside hay[i] (-1 = none)
+  let base = null;          // null = all customers, else the row positions allowed by the area filter
   let lastQ = '', lastCand = null;
 
   function norm(s){
-    return String(s).toLowerCase().replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ').trim();
+    return String(s).normalize('NFC').toLowerCase()
+      .replace(/[\u200c\u200d]/g, '')                    // invisible joiners in Telugu typing
+      .replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ').trim();
   }
 
-  // Normalizes + sorts rows by name and builds the lookup array. Returns the sorted rows.
-  function buildIndex(rows, nameIdx){
-    const recs = rows.map(r => ({ r, k: norm(r[nameIdx] || '') }));
+  // Normalizes + sorts rows by name and builds the lookup arrays. Returns the sorted rows.
+  // teIdx = column of the Telugu name (-1 if none); lang decides which name the rows are sorted by.
+  function buildIndex(rows, nameIdx, teIdx, lang){
+    const recs = rows.map(r => {
+      const en = norm(r[nameIdx] || ''), te = teIdx >= 0 ? norm(r[teIdx] || '') : '';
+      return { r, en, te, k: (lang === 'te' && te) ? te : en };
+    });
     recs.sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);
-    hay = recs.map(x => x.k);
-    lastQ = ''; lastCand = null;
+    hay   = recs.map(x => x.te ? x.en + ' ' + x.te : x.en);
+    teOff = recs.map(x => x.te ? x.en.length + 1 : -1);
+    base = null; lastQ = ''; lastCand = null;
     return recs.map(x => x.r);
   }
 
+  // Restricts every following search to these row positions (or null for everyone).
+  function setBase(b){ base = b; lastQ = ''; lastCand = null; }
+
   // Returns { q, toks, idx } where idx = row positions, best matches first.
+  // With an empty query it returns the whole filtered list (A→Z).
   function search(raw){
     const q = norm(raw);
-    if (!q){ lastQ = ''; lastCand = null; return { q:'', toks:[], idx:[] }; }
+    if (!q){ lastQ = ''; lastCand = null; return { q:'', toks:[], idx: base || [] }; }
     const toks = q.split(' ');
     const sp = toks.map(t => ' ' + t);
-    const src = (lastCand && lastQ && q.startsWith(lastQ)) ? lastCand : null;
+    const src = (lastCand && lastQ && q.startsWith(lastQ)) ? lastCand : base;
     const n = src ? src.length : hay.length;
     const b0 = [], b1 = [], b2 = [], cand = [];
 
@@ -281,7 +486,7 @@
       }
       if (!ok) continue;
       cand.push(idx);
-      if (h.startsWith(q)){ b0.push(idx); continue; }
+      if (h.startsWith(q) || (teOff[idx] > 0 && h.startsWith(q, teOff[idx]))){ b0.push(idx); continue; }
       let wordStart = true;
       for (let t = 0; t < toks.length; t++){
         if (!(h.startsWith(toks[t]) || h.indexOf(sp[t]) !== -1)){ wordStart = false; break; }
@@ -300,23 +505,47 @@
   const app = $('app'), input = $('q'), clearBtn = $('clearBtn'), metaEl = $('meta');
   const resultsEl = $('results'), moreBtn = $('moreBtn');
   const statusEl = $('status'), statusText = $('statusText'), refreshBtn = $('refreshBtn');
+  const plusBtn = $('plusBtn'), panel = $('panel'), chipsEl = $('chips');
+  const langBtn = $('langBtn'), langText = $('langText');
 
-  let headers = [], data = [], nameIdx = -1, statusIdx = -1, colKind = [];
+  let lang = DEFAULT_LANG;
+  let headers = [], headersLow = [], rawRows = [], data = [];
+  let nameIdx = -1, areaIdx = -1, subIdx = -1;
+  let colKind = [], teIdxOf = [], hiddenCol = [];
   let ready = false, loadedStamp = null;
   let results = [], shown = 0, curRe = null;
+
+  // area filter state
+  let rowArea = [], rowSub = [];       // lower-cased ENGLISH area / sub area of every row (the stable keys)
+  let areaList = [];                   // [{key,en,te}] A→Z in the current language
+  let subByArea = new Map();           // area key → [{key,en,te}] A→Z
+  let selArea = '', selSub = '';       // applied filter (keys, '' = none)
+  let pendArea = '', pendSub = '';     // choice being made in the open menu, applied only when finished
+  let panelOpen = false, panelStep = 'area';
 
   const ESC = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
   const esc = s => String(s).replace(/[&<>"']/g, c => ESC[c]);
   const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const tidy = v => String(v == null ? '' : v).trim().replace(/\s+/g, ' ');
+  const disp = x => (lang === 'te' && x.te) ? x.te : x.en;     // label of an area / sub area
+  const T = () => UI[lang];
 
   function fmtPrice(v){
     const n = Number(v);
     return isNaN(n) ? esc(v) : '₹' + n.toLocaleString('en-IN');
   }
-  function labelFor(h){
-    if (LABELS[h]) return LABELS[h];
-    const s = h.replace(/_/g, ' ').trim();
+  function labelFor(i){
+    const k = headersLow[i];
+    if (lang === 'te' && LABELS_TE[k]) return LABELS_TE[k];
+    if (LABELS[k]) return LABELS[k];
+    const s = headers[i].replace(/_/g, ' ').trim();
     return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  // the value of column i for row r, in the current language
+  function show(r, i){
+    const t = teIdxOf[i];
+    if (lang === 'te' && t >= 0 && r[t]) return String(r[t]);
+    return r[i] == null ? '' : String(r[i]);
   }
 
   function setStatus(mode, text){
@@ -326,58 +555,243 @@
   const count = () => data.length.toLocaleString('en-IN');
   const clock = () => new Date().toLocaleTimeString();
 
-  // Loads a { headers, rows } payload into the search index.
+  // Loads a { headers, rows } payload.
   function setData(d){
     const h = (d.headers || []).map(x => String(x).trim());
-    const ni = h.indexOf(NAME_COL);
+    const low = h.map(x => x.toLowerCase());
+    const ni = low.indexOf(NAME_COL);
     if (ni < 0){
       setStatus('error', 'column "' + NAME_COL + '" not found in the sheet');
       return false;
     }
-    headers = h; nameIdx = ni;
-    statusIdx = h.indexOf('status');
-    colKind = h.map(x => {
-      const k = x.toLowerCase();
+    headers = h; headersLow = low; nameIdx = ni;
+    areaIdx = low.indexOf(AREA_COL);
+    subIdx  = low.indexOf(SUB_COL);
+    teIdxOf = low.map(k => TRANSLATED[k] ? low.indexOf(TRANSLATED[k]) : -1);
+    const teCols = Object.values(TRANSLATED);
+    hiddenCol = low.map(k => HIDDEN_COLS.includes(k) || teCols.includes(k));
+    colKind = low.map(k => {
       if (k.includes('price')) return 'price';
       if (k.includes('phone')) return 'phone';
       if (k.endsWith('_id') || k.includes('date')) return 'mono';
       return 'text';
     });
-    data = buildIndex(d.rows || [], ni);
+    rawRows = d.rows || [];
     ready = true;
+    plusBtn.hidden = areaIdx < 0;                       // no area column → no + button
+    rebuild();
     return true;
   }
 
+  // Sorts + indexes the rows for the current language, rebuilds the area lists.
+  // Runs when the sheet loads and whenever the language is switched.
+  function rebuild(){
+    data = buildIndex(rawRows, nameIdx, teIdxOf[nameIdx], lang);
+    buildAreas();
+    renderChips();
+    if (panelOpen) renderPanel();
+  }
+
+  // ---------------- area / sub area filter ----------------
+  // The filter works on the ENGLISH area / sub area text (a stable key), so the
+  // same choice stays selected when the language is switched. Only the label changes.
+  function buildAreas(){
+    const am = new Map();   // area key → { en, te, subs: Map(subKey → {en, te}) }
+    rowArea = new Array(data.length);
+    rowSub  = new Array(data.length);
+    const aTe = teIdxOf[areaIdx], sTe = teIdxOf[subIdx];
+    for (let i = 0; i < data.length; i++){
+      const r = data[i];
+      const a  = areaIdx >= 0 ? tidy(r[areaIdx]) : '';
+      const s  = subIdx  >= 0 ? tidy(r[subIdx])  : '';
+      const at = aTe >= 0 ? tidy(r[aTe]) : '';
+      const st = sTe >= 0 ? tidy(r[sTe]) : '';
+      const ak = a.toLowerCase(), sk = s.toLowerCase();
+      rowArea[i] = ak; rowSub[i] = sk;
+      if (!ak) continue;
+      let e = am.get(ak);
+      if (!e){ e = { en: a, te: at, subs: new Map() }; am.set(ak, e); }
+      else if (!e.te && at) e.te = at;
+      if (sk){
+        const x = e.subs.get(sk);
+        if (!x) e.subs.set(sk, { en: s, te: st });
+        else if (!x.te && st) x.te = st;
+      }
+    }
+    const loc = lang === 'te' ? 'te' : undefined;
+    const cmp = (x, y) => disp(x).localeCompare(disp(y), loc, { numeric:true, sensitivity:'base' });
+    areaList = [...am].map(([key, e]) => ({ key, en:e.en, te:e.te })).sort(cmp);
+    subByArea = new Map([...am].map(([key, e]) =>
+      [key, [...e.subs].map(([k, x]) => ({ key:k, en:x.en, te:x.te })).sort(cmp)]));
+
+    // after a reload keep the choice only if it still exists in the sheet
+    if (selArea && !am.has(selArea)){ selArea = ''; selSub = ''; }
+    if (selSub && !(subByArea.get(selArea) || []).some(x => x.key === selSub)) selSub = '';
+    if (pendArea && !am.has(pendArea)){ pendArea = ''; pendSub = ''; panelStep = 'area'; }
+    applyFilter();
+  }
+
+  function applyFilter(){
+    if (!selArea){ setBase(null); return; }
+    const b = [];
+    for (let i = 0; i < rowArea.length; i++){
+      if (rowArea[i] === selArea && (!selSub || rowSub[i] === selSub)) b.push(i);
+    }
+    setBase(b);
+  }
+
+  const areaLabel = key => { const a = areaList.find(x => x.key === key); return a ? disp(a) : key; };
+  const subLabel  = key => { const s = (subByArea.get(selArea) || []).find(x => x.key === key); return s ? disp(s) : key; };
+
+  function afterFilterChange(){
+    applyFilter();
+    renderChips();
+    run();
+  }
+
+  function renderChips(){
+    plusBtn.classList.toggle('on', !!selArea);
+    if (!selArea){ chipsEl.hidden = true; chipsEl.innerHTML = ''; return; }
+    const chip = (k, v, rm) => '<span class="chip"><span class="k">' + esc(k) + ':</span> ' + esc(v) +
+      '<button type="button" data-rm="' + rm + '" aria-label="Remove filter">×</button></span>';
+    let h = chip(T().area, areaLabel(selArea), 'area');
+    if (selSub) h += chip(T().sub, subLabel(selSub), 'sub');
+    chipsEl.innerHTML = h;
+    chipsEl.hidden = false;
+  }
+
+  function renderPanel(){
+    const subs = subByArea.get(pendArea) || [];
+    let h = '';
+    if (panelStep === 'sub' && pendArea){
+      const an = areaLabel(pendArea);
+      h += '<button class="opt back" type="button" data-act="back">' + esc(T().change) + '</button>';
+      h += '<div class="panel-title">' + esc(T().subIn(an)) + '</div>';
+      h += '<button class="opt' + (!pendSub ? ' on' : '') + '" type="button" data-sub="">' + esc(T().allOf(an)) + '</button>';
+      subs.forEach((s, i) => {
+        h += '<button class="opt' + (s.key === pendSub ? ' on' : '') + '" type="button" data-sub="' + i + '">' + esc(disp(s)) + '</button>';
+      });
+    } else {
+      h += '<div class="panel-title">' + esc(T().area) + '</div>';
+      h += '<button class="opt' + (!pendArea ? ' on' : '') + '" type="button" data-area="">' + esc(T().all) + '</button>';
+      areaList.forEach((a, i) => {
+        h += '<button class="opt' + (a.key === pendArea ? ' on' : '') + '" type="button" data-area="' + i + '">' + esc(disp(a)) + '</button>';
+      });
+      if (!areaList.length) h += '<div class="panel-title">' + esc(T().none) + '</div>';
+    }
+    panel.innerHTML = h;
+  }
+
+  function focusPanel(){
+    const el = panel.querySelector('.opt.on') || panel.querySelector('.opt');
+    if (el) el.focus({ preventScroll:false });
+  }
+
+  function openPanel(){
+    pendArea = selArea; pendSub = selSub;
+    panelStep = (pendArea && (subByArea.get(pendArea) || []).length) ? 'sub' : 'area';
+    panelOpen = true;
+    renderPanel();
+    panel.hidden = false;
+    document.body.classList.add('menu-open');
+    plusBtn.setAttribute('aria-expanded', 'true');
+    focusPanel();
+  }
+  function closePanel(){
+    panelOpen = false;
+    panel.hidden = true;
+    document.body.classList.remove('menu-open');
+    plusBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  plusBtn.addEventListener('click', () => { panelOpen ? closePanel() : openPanel(); });
+
+  // A choice is "finished" when a sub area (or "All of …") is picked, or when the
+  // chosen area has no sub areas, or "All areas" is picked. Only then the list is filtered.
+  function commit(area, sub){
+    selArea = area; selSub = sub;
+    closePanel();
+    afterFilterChange();
+    input.focus();
+  }
+
+  panel.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.act === 'back'){ panelStep = 'area'; renderPanel(); focusPanel(); return; }
+
+    if (b.dataset.area !== undefined){                       // step 1: area
+      if (b.dataset.area === ''){ commit('', ''); return; }
+      const a = areaList[+b.dataset.area];
+      if (a.key !== pendArea){ pendArea = a.key; pendSub = ''; }
+      if ((subByArea.get(pendArea) || []).length){           // step 2: sub area (nothing filtered yet)
+        panelStep = 'sub'; renderPanel(); focusPanel();
+      } else commit(pendArea, '');
+      return;
+    }
+    if (b.dataset.sub !== undefined){                        // step 2 finished
+      const subs = subByArea.get(pendArea) || [];
+      commit(pendArea, b.dataset.sub === '' ? '' : subs[+b.dataset.sub].key);
+    }
+  });
+
+  chipsEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-rm]');
+    if (!b) return;
+    if (b.dataset.rm === 'area'){ selArea = ''; selSub = ''; } else { selSub = ''; }
+    afterFilterChange();
+  });
+
+  // click outside closes the menu (composedPath: the clicked option may already be re-rendered)
+  document.addEventListener('click', e => {
+    if (!panelOpen) return;
+    const path = e.composedPath();
+    if (!path.includes(panel) && !path.includes(plusBtn)) closePanel();
+  });
+
+  // ---------------- language switch ----------------
+  // The button shows the language you will switch TO (like a dark / light toggle).
+  function updateLangBtn(){
+    const toTe = lang === 'en';
+    langText.textContent = toTe ? 'తెలుగు' : 'English';
+    const msg = toTe ? 'Switch to Telugu' : 'Switch to English';
+    langBtn.setAttribute('aria-label', msg);
+    langBtn.title = msg;
+    document.documentElement.lang = lang;
+  }
+  langBtn.addEventListener('click', () => {
+    lang = lang === 'te' ? 'en' : 'te';
+    updateLangBtn();
+    if (ready) rebuild();      // re-sort + relabel areas in the new language
+    run();
+  });
+
+  // ---------------- drawing results ----------------
   function highlight(text){
     if (!curRe) return esc(text);
     return text.split(curRe).map((p, i) => i % 2 ? '<mark>' + esc(p) + '</mark>' : esc(p)).join('');
   }
 
   function fieldHtml(i, v){
-    const wide = headers[i].toLowerCase() === 'address' || headers[i].toLowerCase() === 'notes' || v.length > 40;
+    const wide = headersLow[i] === 'notes' || v.length > 40;
     let val;
     if (v === '') val = '<div class="value empty">—</div>';
     else if (colKind[i] === 'price') val = '<div class="value mono">' + fmtPrice(v) + '</div>';
     else if (colKind[i] === 'phone') val = '<div class="value mono"><a href="tel:' + esc(v.replace(/[^\d+]/g, '')) + '">' + esc(v) + '</a></div>';
     else if (colKind[i] === 'mono') val = '<div class="value mono">' + esc(v) + '</div>';
     else val = '<div class="value">' + esc(v) + '</div>';
-    return '<div class="field' + (wide ? ' wide' : '') + '"><div class="label">' + esc(labelFor(headers[i])) + '</div>' + val + '</div>';
+    return '<div class="field' + (wide ? ' wide' : '') + '"><div class="label">' + esc(labelFor(i)) + '</div>' + val + '</div>';
   }
 
   function cardHtml(idx){
     const r = data[idx];
-    let pill = '';
-    if (statusIdx >= 0 && r[statusIdx]){
-      const ok = String(r[statusIdx]).toLowerCase() === 'active';
-      pill = '<span class="pill ' + (ok ? 'ok' : 'bad') + '">' + esc(r[statusIdx]) + '</span>';
-    }
     let fields = '';
     for (let i = 0; i < headers.length; i++){
-      if (i === nameIdx || i === statusIdx) continue;
-      fields += fieldHtml(i, r[i] == null ? '' : String(r[i]));
+      if (i === nameIdx || hiddenCol[i]) continue;
+      fields += fieldHtml(i, show(r, i));
     }
-    return '<article class="card"><div class="card-head"><div class="card-name">' + highlight(String(r[nameIdx] || '')) +
-           '</div>' + pill + '</div><div class="grid">' + fields + '</div></article>';
+    return '<article class="card"><div class="card-head"><div class="card-name">' + highlight(show(r, nameIdx)) +
+           '</div></div><div class="grid">' + fields + '</div></article>';
   }
 
   function renderBatch(){
@@ -393,32 +807,39 @@
 
   function run(){
     const raw = input.value;
-    const has = raw.trim() !== '';
-    app.classList.toggle('has-query', has);
+    resultsEl.innerHTML = ''; moreBtn.hidden = true; shown = 0; results = []; curRe = null;
+    app.classList.toggle('has-text', raw !== '');
+    const filtered = !!selArea;
 
-    resultsEl.innerHTML = ''; moreBtn.hidden = true; shown = 0; results = [];
-
-    if (!has){
-      search('');
-      metaEl.textContent = ready ? count() + ' customers' : '';
+    if (!ready){
+      app.classList.toggle('has-query', raw.trim() !== '' || filtered);
+      metaEl.textContent = (raw.trim() !== '' || filtered) ? 'Loading customers…' : '';
       return;
     }
-    if (!ready){ metaEl.textContent = 'Loading customers…'; return; }
 
     const t0 = performance.now();
-    const s = search(raw);
+    const s = search(raw);                       // empty query + area chosen → everyone in that area
     const ms = performance.now() - t0;
-    results = s.idx;
-    curRe = new RegExp('(' + s.toks.slice().sort((a, b) => b.length - a.length).map(escRe).join('|') + ')', 'giu');
+    const active = s.q !== '' || filtered;
+    app.classList.toggle('has-query', active);
 
-    if (!results.length){
+    if (!active){ metaEl.textContent = count() + ' customers'; return; }
+
+    results = s.idx;
+    if (s.q) curRe = new RegExp('(' + s.toks.slice().sort((a, b) => b.length - a.length).map(escRe).join('|') + ')', 'giu');
+    const n = results.length;
+
+    if (!n){
       metaEl.textContent = '0 matches';
-      resultsEl.innerHTML = '<div class="none">No customer found for “' + esc(raw.trim()) +
-        '”.<br>Check the spelling, or try fewer letters.</div>';
+      resultsEl.innerHTML = s.q
+        ? '<div class="none">No customer found for “' + esc(raw.trim()) + '”' + (filtered ? ' in this area' : '') +
+          '.<br>Check the spelling, or try fewer letters.</div>'
+        : '<div class="none">No customers in this area yet.</div>';
       return;
     }
-    metaEl.textContent = results.length.toLocaleString('en-IN') + (results.length === 1 ? ' match' : ' matches') +
-                         ' in ' + (ms < 1 ? '<1' : ms.toFixed(0)) + ' ms';
+    metaEl.textContent = s.q
+      ? n.toLocaleString('en-IN') + (n === 1 ? ' match' : ' matches') + ' in ' + (ms < 1 ? '<1' : ms.toFixed(0)) + ' ms'
+      : n.toLocaleString('en-IN') + (n === 1 ? ' customer' : ' customers');
     renderBatch();
   }
 
@@ -429,9 +850,13 @@
   input.addEventListener('input', schedule);
   clearBtn.addEventListener('click', () => { input.value = ''; run(); input.focus(); });
   moreBtn.addEventListener('click', renderBatch);
-  input.addEventListener('keydown', e => { if (e.key === 'Escape' && input.value){ input.value = ''; run(); } });
   document.addEventListener('keydown', e => {
-    if (e.key === '/' && document.activeElement !== input && !e.metaKey && !e.ctrlKey){ e.preventDefault(); input.focus(); }
+    if (e.key === 'Escape'){
+      if (panelOpen){ closePanel(); plusBtn.focus(); }
+      else if (document.activeElement === input && input.value){ input.value = ''; run(); }
+    } else if (e.key === '/' && document.activeElement !== input && !e.metaKey && !e.ctrlKey){
+      e.preventDefault(); input.focus();
+    }
   });
 
   // ---------------- saved copy in the browser (IndexedDB) ----------------
@@ -487,6 +912,7 @@
   }
 
   async function init(){
+    updateLangBtn();
     if (!SCRIPT_URL){
       $('setupBanner').hidden = false;
       setData(DEMO);
