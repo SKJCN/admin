@@ -143,7 +143,6 @@
   .opt:focus-visible{background:var(--paper);}
   .opt.on{color:var(--accent-deep);font-weight:600;}
   .opt.on::after{content:'✓';}
-  .opt.back{color:var(--ink-soft);font-size:14px;}
 
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 4px 0;}
   .chip{
@@ -187,6 +186,19 @@
   .value.mono{font-family:'IBM Plex Mono',monospace;font-size:14px;}
   .value.empty{color:var(--ink-faint);}
   .value a{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--paper-line);}
+
+  /* the customer ID: looks like a link (blue, underlined) but is not one */
+  .idlink{color:#0b57d0;text-decoration:underline;text-underline-offset:2px;}
+
+  /* all package details together in one box */
+  .pack{
+    margin-top:16px;padding:12px 14px 14px;
+    background:rgba(255,97,21,.05);
+    border:1px solid rgba(255,97,21,.25);border-radius:12px;
+  }
+  .pack-title{font-size:12.5px;font-weight:600;line-height:1.4;color:var(--accent-deep);margin-bottom:10px;}
+  .tail{margin-top:16px;}
+  .tail .field{grid-column:1 / -1;}
 
   .none{
     padding:36px 10px;text-align:center;color:var(--ink-soft);font-size:15px;line-height:1.5;
@@ -296,6 +308,7 @@
   @media (max-width:360px){
     .hero h1{font-size:26px;}
     .card{padding:12px 12px 14px;}
+    .pack{padding:10px 10px 12px;}
     .card-name{font-size:18px;}
     .grid{gap:10px 12px;}
     .searchbox{padding-left:16px;}
@@ -382,51 +395,58 @@
   // 1) Paste your deployed Apps Script Web app URL below.
   //    Leave blank to try the page with built-in demo data.
   // ============================================================
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdZbQpZlIo4DLsv449D6TijeoJ8i2Ubka3pDY-9jvEUEgXi614XgCvGpZ2o0lFEuto/exec";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
+  const SCRIPT_URL = "";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
 
   const NAME_COL     = "cust_name";   // main name column (searched, and shown as the card heading)
-  const AREA_COL     = "area";        // first filter (the + button)
-  const SUB_COL      = "sub_area";    // second filter, offered after an area is chosen
-  const ALT_COL      = "alt_name";    // alternate name: searched together with cust_name
+  const AREA_COL     = "area";        // the filter behind the + button
+  const ALT_COL      = "alt_name";    // optional alternate name: searched together with cust_name
+  const ID_COL       = "cust_id2";    // the customer ID that is shown (styled like a link, but it is not one)
+  const SORT_COL     = "cust_id1";    // the list is arranged by this column (it is never shown)
   const DEFAULT_LANG = "te";          // page opens in Telugu ("en" for English)
 
   // English column → its Telugu column. In Telugu mode the Telugu value is shown
   // (English is used if the Telugu cell is empty). The Telugu columns are never
   // shown as separate fields.
-  const TRANSLATED = { cust_name:"cust_name_te", area:"area_te", sub_area:"sub_area_te", alt_name:"alt_name_te" };
-  const HIDDEN_COLS = ["connection_date"];   // columns that are never shown
+  const TRANSLATED = { cust_name:"cust_name_te", area:"area_te", alt_name:"alt_name_te", notes:"notes_te" };
+  const HIDDEN_COLS = ["connection_date"];   // columns that are never shown (SORT_COL is hidden automatically)
+
+  // Package details: these columns are grouped together in one box on every card
+  // (any column whose name starts with "pack_" is added to the box too).
+  const PACK_COLS  = ["pack_id","pack_speed","pack_type","pack_price","pack_price_month","months","discount"];
+  const PACK_TITLE = "Package details";
+  const TAIL_COLS  = ["notes"];       // shown full width at the bottom of the card, under the package box
 
   const PAGE_SIZE  = 30;            // cards drawn at a time
   const REFRESH_MS = 5 * 60 * 1000; // quietly re-check the sheet every 5 minutes
 
+  // Demo data (used when SCRIPT_URL is empty). Rows are deliberately NOT in cust_id1 order.
   const DEMO = {
-    headers: ["cust_id","cust_name","cust_name_te","phone","area","area_te","sub_area","sub_area_te","pack_name","pack_price","alt_name","alt_name_te"],
+    headers: ["cust_id1","cust_id2","cust_name","cust_name_te","phone","area","area_te","pack_id","pack_speed","pack_type","pack_price_month","months","discount","notes","notes_te"],
     updated: 0,
     rows: [
-      ["C0001","Ravi Kumar","రవి కుమార్","9876543210","Gandhi Nagar","గాంధీ నగర్","Temple Street","గుడి వీధి","Gold Package","4999","Ravi Tailors","రవి టైలర్స్"],
-      ["C0002","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapeta","కొత్తపేట","Market Lane","మార్కెట్ సందు","Silver Package","2999","Raju","రాజు"],
-      ["C0003","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Gandhi Nagar","గాంధీ నగర్","Park Road","పార్క్ రోడ్","Basic Package","1499","",""],
-      ["C0004","Venkata Ramana Rao","వెంకట రమణ రావు","9000011122","Main Road","మెయిన్ రోడ్","Bank Street","బ్యాంక్ వీధి","Platinum Package","7999","Sri Sai Traders","శ్రీ సాయి ట్రేడర్స్"],
-      ["C0005","Suresh Babu","సురేష్ బాబు","9345612780","Kothapeta","కొత్తపేట","Church Street","చర్చి వీధి","Silver Package","2999","Chinna","చిన్న"],
-      ["C0006","Priya Chowdary","ప్రియ చౌదరి","9700012345","Gandhi Nagar","గాంధీ నగర్","Temple Street","గుడి వీధి","Gold Package","4999","",""],
-      ["C0007","Kiran Kumar","కిరణ్ కుమార్","9811122233","Main Road","మెయిన్ రోడ్","Petrol Bunk","పెట్రోల్ బంక్","Basic Package","1499","Kiran Medicals","కిరణ్ మెడికల్స్"],
-      ["C0008","Anitha Sharma","అనిత శర్మ","9922233344","Kothapeta","కొత్తపేట","Market Lane","మార్కెట్ సందు","Silver Package","2999","",""]
+      ["1003","SK2043","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Gandhi Nagar","గాంధీ నగర్","P01","30 Mbps","Basic","499","1","0%","",""],
+      ["1001","SK1187","Ravi Kumar","రవి కుమార్","9876543210","Gandhi Nagar","గాంధీ నగర్","P03","100 Mbps","Fibre","999","12","10%","Prefers evening visits","సాయంత్రం రావడం ఇష్టం"],
+      ["1007","SK3310","Kiran Kumar","కిరణ్ కుమార్","9811122233","Main Road","మెయిన్ రోడ్","P02","50 Mbps","Standard","699","6","5%","",""],
+      ["1002","SK0921","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapeta","కొత్తపేట","P04","200 Mbps","Unlimited","1499","12","15%","Static IP","స్టాటిక్ ఐపీ"],
+      ["1005","SK2760","Suresh Babu","సురేష్ బాబు","9345612780","Kothapeta","కొత్తపేట","P02","50 Mbps","Standard","699","3","0%","",""],
+      ["1004","SK1544","Venkata Ramana Rao","వెంకట రమణ రావు","9000011122","Main Road","మెయిన్ రోడ్","P04","200 Mbps","Unlimited","1499","12","10%","Router replaced","రూటర్ మార్చారు"],
+      ["1006","SK0408","Priya Chowdary","ప్రియ చౌదరి","9700012345","Gandhi Nagar","గాంధీ నగర్","P03","100 Mbps","Fibre","999","6","5%","",""],
+      ["1008","SK2891","Anitha Sharma","అనిత శర్మ","9922233344","Kothapeta","కొత్తపేట","P01","30 Mbps","Basic","499","1","0%","",""]
     ]
   };
 
   // Field labels. In Telugu mode only these three change (the other labels stay English).
   const LABELS = {
-    cust_id:"Customer ID", cust_name:"Name", phone:"Phone",
-    area:"Area", sub_area:"Sub area", pack_name:"Package", pack_price:"Price", alt_name:"Alternate name"
+    cust_id2:"Customer ID", cust_name:"Name", phone:"Phone", area:"Area",
+    pack_id:"Pack ID", pack_speed:"Speed", pack_type:"Type", pack_price:"Price", pack_price_month:"Price / month",
+    months:"Months", discount:"Discount", notes:"Notes", alt_name:"Alternate name"
   };
-  const LABELS_TE = { area:"ప్రాంతం", sub_area:"ఉప ప్రాంతం", alt_name:"ప్రత్యామ్నాయ పేరు" };
+  const LABELS_TE = { area:"ప్రాంతం", notes:"గమనికలు", alt_name:"ప్రత్యామ్నాయ పేరు" };
 
-  // Words used in the + menu and filter chips
+  // Words used in the + menu and the filter chip
   const UI = {
-    te: { area:"ప్రాంతం", sub:"ఉప ప్రాంతం", all:"అన్ని ప్రాంతాలు", change:"‹ ప్రాంతం మార్చు",
-          subIn: a => "ఉప ప్రాంతం: " + a, allOf: a => "మొత్తం " + a, none:"ప్రాంతాలు కనిపించలేదు" },
-    en: { area:"Area", sub:"Sub area", all:"All areas", change:"‹ Change area",
-          subIn: a => "Sub area in " + a, allOf: a => "All of " + a, none:"No areas found in the sheet." }
+    te: { area:"ప్రాంతం", all:"అన్ని ప్రాంతాలు", none:"ప్రాంతాలు కనిపించలేదు" },
+    en: { area:"Area", all:"All areas", none:"No areas found in the sheet." }
   };
 
   // =====================================================================
@@ -436,18 +456,16 @@
   //  * Each customer is indexed once with ALL their names (name, Telugu name,
   //    alternate name, Telugu alternate name), so a search in English OR Telugu,
   //    by name OR alternate name, finds the same customer.
-  //  * Rows are sorted A→Z once (by the name shown in the current language).
+  //  * Rows are arranged once, by cust_id1 ("natural" order: 2 comes before 10).
+  //    Every list the page shows is in that order, so nothing is sorted while typing.
   //  * Each keystroke is one pass of String.indexOf over plain strings.
-  //  * Picking an area / sub area builds a short list ("base") once; every
-  //    search after that only looks inside that list.
+  //  * Picking an area builds a short list ("base") once; every search after
+  //    that only looks inside that list.
   //  * While you keep typing the same name ("ra" → "rav" → "ravi"), only the
   //    previous matches are re-checked, so every extra letter is cheaper.
-  //  * Results are bucketed (starts-with → word-starts-with → contains), so no
-  //    sorting is needed at search time.
   // =====================================================================
   // <search-core>
-  let hay = [];             // normalized names of each customer joined by spaces, sorted A→Z
-  let offs = new Int32Array(0), stride = 1;   // where each name starts inside hay[i] (-1 = none)
+  let hay = [];             // normalized names of each customer joined by spaces, in list order
   let base = null;          // null = all customers, else the row positions allowed by the area filter
   let lastQ = '', lastCand = null;
 
@@ -460,33 +478,37 @@
       .replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ').trim();
   }
 
-  // Normalizes + sorts rows by name and builds the lookup arrays. Returns the sorted rows.
-  //   nameIdx = main name column, teIdx = its Telugu column (-1 if none)
-  //   extra   = other columns to search too, e.g. [altIdx, altTeIdx] (-1 entries are ignored)
-  //   lang    = which name the rows are sorted by ('te' → Telugu name when there is one)
-  function buildIndex(rows, nameIdx, teIdx, lang, extra){
-    const cols = [nameIdx, teIdx].concat(extra || []);
-    stride = cols.length;
-    const n = rows.length;
+  // Sort key that puts ids in natural order with plain "<" comparison:
+  // digits are zero-padded, so "2" < "10" and "C9" < "C10". Customers without an id go last.
+  function idKey(v){
+    const s = String(v == null ? '' : v).trim().toLowerCase();
+    if (!s) return '\uffff';
+    return s.replace(/\d+/g, m => m.length >= 12 ? m : m.padStart(12, '0'));
+  }
+
+  // Arranges the rows and builds the lookup array. Returns the arranged rows.
+  //   o.name  = main name column      o.te    = its Telugu column (-1 if none)
+  //   o.extra = other columns to search too, e.g. [altIdx, altTeIdx] (-1 entries are ignored)
+  //   o.sort  = column to arrange by (cust_id1). If -1, rows are arranged A→Z by name in o.lang
+  function buildIndex(rows, o){
+    const cols = [o.name, o.te].concat(o.extra || []);
     const recs = rows.map(r => {
-      const parts = cols.map(c => c >= 0 ? norm(r[c] || '') : '');
-      return { r, parts, k: (lang === 'te' && parts[1]) ? parts[1] : parts[0] };
-    });
-    recs.sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);
-    hay = new Array(n);
-    offs = new Int32Array(n * stride).fill(-1);
-    for (let i = 0; i < n; i++){
-      const parts = recs[i].parts;
-      let s = '';
-      for (let j = 0; j < stride; j++){
-        const p = parts[j];
-        if (!p) continue;
-        if (s) s += ' ';
-        offs[i * stride + j] = s.length;
-        s += p;
+      const parts = [];
+      for (let j = 0; j < cols.length; j++){
+        if (cols[j] < 0) continue;
+        const p = norm(r[cols[j]] || '');
+        if (p) parts.push(p);
       }
-      hay[i] = s;
-    }
+      let k;
+      if (o.sort >= 0) k = idKey(r[o.sort]);
+      else {
+        const te = o.te >= 0 ? norm(r[o.te] || '') : '';
+        k = (o.lang === 'te' && te) ? te : norm(r[o.name] || '');
+      }
+      return { r, h: parts.join(' '), k };
+    });
+    recs.sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);   // stable: equal ids keep sheet order
+    hay = recs.map(x => x.h);
     base = null; lastQ = ''; lastCand = null;
     return recs.map(x => x.r);
   }
@@ -494,17 +516,15 @@
   // Restricts every following search to these row positions (or null for everyone).
   function setBase(b){ base = b; lastQ = ''; lastCand = null; }
 
-  // Returns { q, toks, idx } where idx = row positions, best matches first.
-  // With an empty query it returns the whole filtered list (A→Z).
+  // Returns { q, toks, idx } where idx = row positions in list order.
+  // With an empty query it returns the whole filtered list.
   function search(raw){
     const q = norm(raw);
     if (!q){ lastQ = ''; lastCand = null; return { q:'', toks:[], idx: base || [] }; }
     const toks = q.split(' ');
-    const sp = toks.map(t => ' ' + t);
     const src = (lastCand && lastQ && q.startsWith(lastQ)) ? lastCand : base;
     const n = src ? src.length : hay.length;
-    const b0 = [], b1 = [], b2 = [], cand = [];
-
+    const out = [];
     for (let i = 0; i < n; i++){
       const idx = src ? src[i] : i;
       const h = hay[idx];
@@ -512,28 +532,10 @@
       for (let t = 0; t < toks.length; t++){
         if (h.indexOf(toks[t]) === -1){ ok = false; break; }
       }
-      if (!ok) continue;
-      cand.push(idx);
-
-      // best bucket: the text typed is the START of any one of the customer's names
-      let starts = h.startsWith(q);
-      if (!starts){
-        const o = idx * stride;
-        for (let j = 1; j < stride; j++){
-          const p = offs[o + j];
-          if (p > 0 && h.startsWith(q, p)){ starts = true; break; }
-        }
-      }
-      if (starts){ b0.push(idx); continue; }
-
-      let wordStart = true;
-      for (let t = 0; t < toks.length; t++){
-        if (!(h.startsWith(toks[t]) || h.indexOf(sp[t]) !== -1)){ wordStart = false; break; }
-      }
-      (wordStart ? b1 : b2).push(idx);
+      if (ok) out.push(idx);
     }
-    lastQ = q; lastCand = cand;
-    return { q, toks, idx: b0.concat(b1, b2) };
+    lastQ = q; lastCand = out;
+    return { q, toks, idx: out };
   }
   // </search-core>
 
@@ -549,24 +551,23 @@
 
   let lang = DEFAULT_LANG;
   let headers = [], headersLow = [], rawRows = [], data = [];
-  let nameIdx = -1, areaIdx = -1, subIdx = -1, altIdx = -1;
+  let nameIdx = -1, areaIdx = -1, altIdx = -1, idIdx = -1, sortIdx = -1;
   let colKind = [], teIdxOf = [], hiddenCol = [];
+  let mainIdx = [], packIdx = [], tailIdx = [];      // which columns go where on a card
   let ready = false, loadedStamp = null;
   let results = [], shown = 0, curRe = null;
 
   // area filter state
-  let rowArea = [], rowSub = [];       // lower-cased ENGLISH area / sub area of every row (the stable keys)
+  let rowArea = [];                    // lower-cased ENGLISH area of every row (the stable key)
   let areaList = [];                   // [{key,en,te}] A→Z in the current language
-  let subByArea = new Map();           // area key → [{key,en,te}] A→Z
-  let selArea = '', selSub = '';       // applied filter (keys, '' = none)
-  let pendArea = '', pendSub = '';     // choice being made in the open menu, applied only when finished
-  let panelOpen = false, panelStep = 'area';
+  let selArea = '';                    // applied filter (key, '' = none)
+  let panelOpen = false;
 
   const ESC = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
   const esc = s => String(s).replace(/[&<>"']/g, c => ESC[c]);
   const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const tidy = v => String(v == null ? '' : v).trim().replace(/\s+/g, ' ');
-  const disp = x => (lang === 'te' && x.te) ? x.te : x.en;     // label of an area / sub area
+  const disp = x => (lang === 'te' && x.te) ? x.te : x.en;     // label of an area
   const T = () => UI[lang];
 
   function fmtPrice(v){
@@ -605,17 +606,32 @@
     }
     headers = h; headersLow = low; nameIdx = ni;
     areaIdx = low.indexOf(AREA_COL);
-    subIdx  = low.indexOf(SUB_COL);
     altIdx  = low.indexOf(ALT_COL);
+    idIdx   = low.indexOf(ID_COL);
+    sortIdx = low.indexOf(SORT_COL);
     teIdxOf = low.map(k => TRANSLATED[k] ? low.indexOf(TRANSLATED[k]) : -1);
     const teCols = Object.values(TRANSLATED);
-    hiddenCol = low.map(k => HIDDEN_COLS.includes(k) || teCols.includes(k));
+    hiddenCol = low.map(k => HIDDEN_COLS.includes(k) || teCols.includes(k) || (k === SORT_COL && k !== ID_COL));
     colKind = low.map(k => {
       if (k.includes('price')) return 'price';
       if (k.includes('phone')) return 'phone';
       if (k.endsWith('_id') || k.includes('date')) return 'mono';
       return 'text';
     });
+
+    // where each column goes on the card: main fields, the package box, or the bottom (notes)
+    const isPack = k => PACK_COLS.includes(k) || k.startsWith('pack_');
+    mainIdx = []; packIdx = []; tailIdx = [];
+    low.forEach((k, i) => {
+      if (i === nameIdx || hiddenCol[i]) return;
+      (isPack(k) ? packIdx : TAIL_COLS.includes(k) ? tailIdx : mainIdx).push(i);
+    });
+
+    // the search bar only mentions "alternate name" when the sheet has that column
+    const ph = altIdx >= 0 ? 'Search by name or alternate name' : 'Search by customer name';
+    input.placeholder = ph;
+    input.setAttribute('aria-label', ph);
+
     rawRows = d.rows || [];
     ready = true;
     plusBtn.hidden = areaIdx < 0;                       // no area column → no + button
@@ -623,66 +639,57 @@
     return true;
   }
 
-  // Sorts + indexes the rows for the current language, rebuilds the area lists.
-  // Runs when the sheet loads and whenever the language is switched.
+  // Arranges + indexes the rows (by cust_id1), rebuilds the area list.
+  // Runs when the sheet loads. (A language switch only needs relabel(), unless the
+  // sheet has no cust_id1 column and the list is arranged by name instead.)
   function rebuild(){
-    // search the name AND the alternate name (English + Telugu of each)
-    data = buildIndex(rawRows, nameIdx, teIdxOf[nameIdx], lang, [altIdx, altIdx >= 0 ? teIdxOf[altIdx] : -1]);
+    data = buildIndex(rawRows, {
+      name: nameIdx, te: teIdxOf[nameIdx],
+      extra: [altIdx, altIdx >= 0 ? teIdxOf[altIdx] : -1],   // search the alternate name too
+      sort: sortIdx, lang
+    });
+    relabel();
+  }
+  function relabel(){
     buildAreas();
     renderChips();
     if (panelOpen) renderPanel();
   }
 
-  // ---------------- area / sub area filter ----------------
-  // The filter works on the ENGLISH area / sub area text (a stable key), so the
-  // same choice stays selected when the language is switched. Only the label changes.
+  // ---------------- area filter ----------------
+  // The filter works on the ENGLISH area text (a stable key), so the same choice
+  // stays selected when the language is switched. Only the label changes.
   function buildAreas(){
-    const am = new Map();   // area key → { en, te, subs: Map(subKey → {en, te}) }
+    const am = new Map();   // area key → { en, te }
     rowArea = new Array(data.length);
-    rowSub  = new Array(data.length);
-    const aTe = teIdxOf[areaIdx], sTe = teIdxOf[subIdx];
+    const aTe = areaIdx >= 0 ? teIdxOf[areaIdx] : -1;
     for (let i = 0; i < data.length; i++){
       const r = data[i];
       const a  = areaIdx >= 0 ? tidy(r[areaIdx]) : '';
-      const s  = subIdx  >= 0 ? tidy(r[subIdx])  : '';
       const at = aTe >= 0 ? tidy(r[aTe]) : '';
-      const st = sTe >= 0 ? tidy(r[sTe]) : '';
-      const ak = a.toLowerCase(), sk = s.toLowerCase();
-      rowArea[i] = ak; rowSub[i] = sk;
+      const ak = a.toLowerCase();
+      rowArea[i] = ak;
       if (!ak) continue;
-      let e = am.get(ak);
-      if (!e){ e = { en: a, te: at, subs: new Map() }; am.set(ak, e); }
+      const e = am.get(ak);
+      if (!e) am.set(ak, { en: a, te: at });
       else if (!e.te && at) e.te = at;
-      if (sk){
-        const x = e.subs.get(sk);
-        if (!x) e.subs.set(sk, { en: s, te: st });
-        else if (!x.te && st) x.te = st;
-      }
     }
     const loc = lang === 'te' ? 'te' : undefined;
-    const cmp = (x, y) => disp(x).localeCompare(disp(y), loc, { numeric:true, sensitivity:'base' });
-    areaList = [...am].map(([key, e]) => ({ key, en:e.en, te:e.te })).sort(cmp);
-    subByArea = new Map([...am].map(([key, e]) =>
-      [key, [...e.subs].map(([k, x]) => ({ key:k, en:x.en, te:x.te })).sort(cmp)]));
+    areaList = [...am].map(([key, e]) => ({ key, en:e.en, te:e.te }))
+      .sort((x, y) => disp(x).localeCompare(disp(y), loc, { numeric:true, sensitivity:'base' }));
 
-    // after a reload keep the choice only if it still exists in the sheet
-    if (selArea && !am.has(selArea)){ selArea = ''; selSub = ''; }
-    if (selSub && !(subByArea.get(selArea) || []).some(x => x.key === selSub)) selSub = '';
-    if (pendArea && !am.has(pendArea)){ pendArea = ''; pendSub = ''; panelStep = 'area'; }
+    if (selArea && !am.has(selArea)) selArea = '';      // after a reload keep the choice only if it still exists
     applyFilter();
   }
 
   function applyFilter(){
     if (!selArea){ setBase(null); return; }
     const b = [];
-    for (let i = 0; i < rowArea.length; i++){
-      if (rowArea[i] === selArea && (!selSub || rowSub[i] === selSub)) b.push(i);
-    }
+    for (let i = 0; i < rowArea.length; i++) if (rowArea[i] === selArea) b.push(i);
     setBase(b);
   }
 
   const areaLabel = key => { const a = areaList.find(x => x.key === key); return a ? disp(a) : key; };
-  const subLabel  = key => { const s = (subByArea.get(selArea) || []).find(x => x.key === key); return s ? disp(s) : key; };
 
   function afterFilterChange(){
     applyFilter();
@@ -693,33 +700,18 @@
   function renderChips(){
     plusBtn.classList.toggle('on', !!selArea);
     if (!selArea){ chipsEl.hidden = true; chipsEl.innerHTML = ''; return; }
-    const chip = (k, v, rm) => '<span class="chip"><span class="k">' + esc(k) + ':</span> ' + esc(v) +
-      '<button type="button" data-rm="' + rm + '" aria-label="Remove filter">×</button></span>';
-    let h = chip(T().area, areaLabel(selArea), 'area');
-    if (selSub) h += chip(T().sub, subLabel(selSub), 'sub');
-    chipsEl.innerHTML = h;
+    chipsEl.innerHTML = '<span class="chip"><span class="k">' + esc(T().area) + ':</span> ' + esc(areaLabel(selArea)) +
+      '<button type="button" data-rm="area" aria-label="Remove filter">×</button></span>';
     chipsEl.hidden = false;
   }
 
   function renderPanel(){
-    const subs = subByArea.get(pendArea) || [];
-    let h = '';
-    if (panelStep === 'sub' && pendArea){
-      const an = areaLabel(pendArea);
-      h += '<button class="opt back" type="button" data-act="back">' + esc(T().change) + '</button>';
-      h += '<div class="panel-title">' + esc(T().subIn(an)) + '</div>';
-      h += '<button class="opt' + (!pendSub ? ' on' : '') + '" type="button" data-sub="">' + esc(T().allOf(an)) + '</button>';
-      subs.forEach((s, i) => {
-        h += '<button class="opt' + (s.key === pendSub ? ' on' : '') + '" type="button" data-sub="' + i + '">' + esc(disp(s)) + '</button>';
-      });
-    } else {
-      h += '<div class="panel-title">' + esc(T().area) + '</div>';
-      h += '<button class="opt' + (!pendArea ? ' on' : '') + '" type="button" data-area="">' + esc(T().all) + '</button>';
-      areaList.forEach((a, i) => {
-        h += '<button class="opt' + (a.key === pendArea ? ' on' : '') + '" type="button" data-area="' + i + '">' + esc(disp(a)) + '</button>';
-      });
-      if (!areaList.length) h += '<div class="panel-title">' + esc(T().none) + '</div>';
-    }
+    let h = '<div class="panel-title">' + esc(T().area) + '</div>';
+    h += '<button class="opt' + (!selArea ? ' on' : '') + '" type="button" data-area="">' + esc(T().all) + '</button>';
+    areaList.forEach((a, i) => {
+      h += '<button class="opt' + (a.key === selArea ? ' on' : '') + '" type="button" data-area="' + i + '">' + esc(disp(a)) + '</button>';
+    });
+    if (!areaList.length) h += '<div class="panel-title">' + esc(T().none) + '</div>';
     panel.innerHTML = h;
   }
 
@@ -741,8 +733,6 @@
   window.addEventListener('resize', fitPanel);
 
   function openPanel(){
-    pendArea = selArea; pendSub = selSub;
-    panelStep = (pendArea && (subByArea.get(pendArea) || []).length) ? 'sub' : 'area';
     panelOpen = true;
     renderPanel();
     panel.hidden = false;
@@ -760,39 +750,19 @@
 
   plusBtn.addEventListener('click', () => { panelOpen ? closePanel() : openPanel(); });
 
-  // A choice is "finished" when a sub area (or "All of …") is picked, or when the
-  // chosen area has no sub areas, or "All areas" is picked. Only then the list is filtered.
-  function commit(area, sub){
-    selArea = area; selSub = sub;
+  // Picking an area (or "All areas") filters the list right away.
+  panel.addEventListener('click', e => {
+    const b = e.target.closest('button[data-area]');
+    if (!b) return;
+    selArea = b.dataset.area === '' ? '' : areaList[+b.dataset.area].key;
     closePanel();
     afterFilterChange();
     input.focus();
-  }
-
-  panel.addEventListener('click', e => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    if (b.dataset.act === 'back'){ panelStep = 'area'; renderPanel(); focusPanel(); return; }
-
-    if (b.dataset.area !== undefined){                       // step 1: area
-      if (b.dataset.area === ''){ commit('', ''); return; }
-      const a = areaList[+b.dataset.area];
-      if (a.key !== pendArea){ pendArea = a.key; pendSub = ''; }
-      if ((subByArea.get(pendArea) || []).length){           // step 2: sub area (nothing filtered yet)
-        panelStep = 'sub'; renderPanel(); focusPanel();
-      } else commit(pendArea, '');
-      return;
-    }
-    if (b.dataset.sub !== undefined){                        // step 2 finished
-      const subs = subByArea.get(pendArea) || [];
-      commit(pendArea, b.dataset.sub === '' ? '' : subs[+b.dataset.sub].key);
-    }
   });
 
   chipsEl.addEventListener('click', e => {
-    const b = e.target.closest('button[data-rm]');
-    if (!b) return;
-    if (b.dataset.rm === 'area'){ selArea = ''; selSub = ''; } else { selSub = ''; }
+    if (!e.target.closest('button[data-rm]')) return;
+    selArea = '';
     afterFilterChange();
   });
 
@@ -816,7 +786,10 @@
   langBtn.addEventListener('click', () => {
     lang = lang === 'te' ? 'en' : 'te';
     updateLangBtn();
-    if (ready) rebuild();      // re-sort + relabel areas in the new language
+    if (ready){
+      if (sortIdx < 0) rebuild();   // no cust_id1: the list is arranged by name, so re-arrange
+      else relabel();               // order does not depend on language: only relabel areas
+    }
     run();
   });
 
@@ -830,6 +803,7 @@
     const wide = v.length > 40;
     let val;
     if (v === '') val = '<div class="value empty">—</div>';
+    else if (i === idIdx) val = '<div class="value mono"><span class="idlink">' + esc(v) + '</span></div>';   // looks like a link, is not one
     else if (colKind[i] === 'price') val = '<div class="value mono">' + fmtPrice(v) + '</div>';
     else if (colKind[i] === 'phone') val = '<div class="value mono"><a href="tel:' + esc(v.replace(/[^\d+]/g, '')) + '">' + esc(v) + '</a></div>';
     else if (colKind[i] === 'mono') val = '<div class="value mono">' + esc(v) + '</div>';
@@ -839,13 +813,12 @@
 
   function cardHtml(idx){
     const r = data[idx];
-    let fields = '';
-    for (let i = 0; i < headers.length; i++){
-      if (i === nameIdx || hiddenCol[i]) continue;
-      fields += fieldHtml(i, show(r, i));
-    }
-    return '<article class="card"><div class="card-head"><div class="card-name">' + highlight(show(r, nameIdx)) +
-           '</div></div><div class="grid">' + fields + '</div></article>';
+    const fields = list => list.map(i => fieldHtml(i, show(r, i))).join('');
+    let html = '<article class="card"><div class="card-head"><div class="card-name">' + highlight(show(r, nameIdx)) + '</div></div>';
+    if (mainIdx.length) html += '<div class="grid">' + fields(mainIdx) + '</div>';
+    if (packIdx.length) html += '<section class="pack"><div class="pack-title">' + esc(PACK_TITLE) + '</div><div class="grid">' + fields(packIdx) + '</div></section>';
+    if (tailIdx.length) html += '<div class="grid tail">' + fields(tailIdx) + '</div>';
+    return html + '</article>';
   }
 
   function renderBatch(){
