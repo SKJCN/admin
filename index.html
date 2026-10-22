@@ -395,7 +395,7 @@
   // 1) Paste your deployed Apps Script Web app URL below.
   //    Leave blank to try the page with built-in demo data.
   // ============================================================
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdZbQpZlIo4DLsv449D6TijeoJ8i2Ubka3pDY-9jvEUEgXi614XgCvGpZ2o0lFEuto/exec";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
+  const SCRIPT_URL = "";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
 
   const NAME_COL     = "cust_name";   // main name column (searched, and shown as the card heading)
   const AREA_COL     = "area";        // the filter behind the + button
@@ -435,19 +435,15 @@
     ]
   };
 
-  // Field labels. In Telugu mode only these three change (the other labels stay English).
+  // Field labels (headings). They always stay in English; only the VALUES under them change language.
   const LABELS = {
     cust_id2:"Customer ID", cust_name:"Name", phone:"Phone", area:"Area",
     pack_id:"Pack ID", pack_speed:"Speed", pack_type:"Type", pack_price:"Price", pack_price_month:"Price / month",
     months:"Months", discount:"Discount", notes:"Notes", alt_name:"Alternate name"
   };
-  const LABELS_TE = { area:"ప్రాంతం", notes:"గమనికలు", alt_name:"ప్రత్యామ్నాయ పేరు" };
 
-  // Words used in the + menu and the filter chip
-  const UI = {
-    te: { area:"ప్రాంతం", all:"అన్ని ప్రాంతాలు", none:"ప్రాంతాలు కనిపించలేదు" },
-    en: { area:"Area", all:"All areas", none:"No areas found in the sheet." }
-  };
+  // Words used in the + menu and the filter chip (always English; only the area NAMES switch language)
+  const UI = { area:"Area", all:"All areas", none:"No areas found in the sheet." };
 
   // =====================================================================
   //  SEARCH CORE — the part that makes it fast. No DOM in here.
@@ -568,7 +564,7 @@
   const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const tidy = v => String(v == null ? '' : v).trim().replace(/\s+/g, ' ');
   const disp = x => (lang === 'te' && x.te) ? x.te : x.en;     // label of an area
-  const T = () => UI[lang];
+  const T = () => UI;
 
   function fmtPrice(v){
     const n = Number(v);
@@ -576,7 +572,6 @@
   }
   function labelFor(i){
     const k = headersLow[i];
-    if (lang === 'te' && LABELS_TE[k]) return LABELS_TE[k];
     if (LABELS[k]) return LABELS[k];
     const s = headers[i].replace(/_/g, ' ').trim();
     return s.charAt(0).toUpperCase() + s.slice(1);
