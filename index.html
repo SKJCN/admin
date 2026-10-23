@@ -71,15 +71,12 @@
     padding:0 max(20px,env(safe-area-inset-right,0px)) calc(90px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));
   }
 
-  .hero{padding-top:19vh;padding-top:clamp(28px,18dvh,170px);transition:padding-top .28s ease;}
-  .has-query .hero{padding-top:6px;}
+  .hero{padding-top:6px;}
   .hero h1{
-    font-family:'Fraunces',serif;font-weight:600;font-size:36px;line-height:1.15;
+    font-family:'Fraunces',serif;font-weight:600;font-size:32px;line-height:1.2;
     color:var(--accent);
-    text-align:center;margin:0 0 24px;max-height:60px;overflow:hidden;
-    transition:opacity .2s ease, max-height .28s ease, margin .28s ease;
+    text-align:center;margin:4px 0 18px;
   }
-  .has-query .hero h1{opacity:0;max-height:0;margin:0;}
 
   .searchwrap{position:relative;}
   .searchbox{
@@ -167,8 +164,8 @@
     background:var(--card);
     border:1px solid var(--paper-line);
     border-radius:14px;
-    padding:16px 18px 18px;
-    margin-bottom:12px;
+    padding:14px 18px 14px;
+    margin-bottom:10px;
   }
   .card-head{
     padding-bottom:12px;margin-bottom:14px;
@@ -187,8 +184,29 @@
   .value.empty{color:var(--ink-faint);}
   .value a{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--paper-line);}
 
-  /* the customer ID: looks like a link (blue, underlined) but is not one */
-  .idlink{color:#0b57d0;text-decoration:underline;text-underline-offset:2px;}
+  /* collapsed row: name, then the customer ID (big, blue, link-style) and the area */
+  .card-top{display:grid;grid-template-columns:auto 1fr;gap:0 32px;align-items:start;}
+  .card-top .value{min-height:40px;display:flex;align-items:center;}
+  .idbtn{
+    display:inline-flex;align-items:center;gap:8px;margin:0;padding:0;
+    border:0;background:none;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600;line-height:1.2;
+    color:#0b57d0;text-align:left;
+  }
+  .idtext{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:4px;}
+  .caret{
+    width:8px;height:8px;flex:none;
+    border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+    transform:rotate(45deg) translateY(-2px);transition:transform .15s ease;
+  }
+  .idbtn[aria-expanded="true"] .caret{transform:rotate(225deg) translateY(-2px);}
+  .card.open{border-color:rgba(255,97,21,.5);box-shadow:0 6px 22px rgba(35,35,35,.08);}
+  #results{overflow-anchor:none;}   /* we keep the scroll position steady ourselves when a card closes */
+
+  /* the dropdown with all the details */
+  .details{margin-top:16px;padding-top:16px;border-top:1px solid var(--paper-line);animation:reveal .18s ease;}
+  .details > :first-child{margin-top:0;}
+  @keyframes reveal{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
 
   /* all package details together in one box */
   .pack{
@@ -238,6 +256,7 @@
     .chip button:hover{background:var(--paper-line);}
     .value a:hover{border-bottom-color:var(--accent);}
     .more-btn:hover{background:var(--ink);color:var(--bg);}
+    .idbtn:hover .idtext{text-decoration-thickness:2.5px;}
   }
 
   /* card details: 3 columns once the card is wide enough */
@@ -251,13 +270,13 @@
             padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));}
     .brand{font-size:20px;}
     main{max-width:780px;}
-    .hero h1{font-size:40px;max-height:68px;}
+    .hero h1{font-size:36px;}
     .searchbox{height:62px;padding-left:26px;}
     .searchbox input{font-size:18px;}
     .panel{width:min(380px,100%);}
     .opt{font-size:16px;padding:11px 14px;}
     .chip{font-size:14.5px;}
-    .card{padding:20px 24px 22px;}
+    .card{padding:16px 24px 16px;}
     .card-name{font-size:22px;}
     .value{font-size:16px;}
     .label{font-size:13px;}
@@ -268,11 +287,12 @@
     .right{gap:8px;}
     .langbtn{height:32px;padding:0 11px 0 8px;font-size:13px;}
     main{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));}
-    .hero h1{font-size:30px;}
+    .hero h1{font-size:28px;}
     .searchbox{height:54px;}
     .searchbox input{font-size:16px;}   /* 16px stops iPhone auto-zoom */
-    .card{padding:14px 14px 16px;}
+    .card{padding:12px 14px 12px;}
     .grid{gap:12px 16px;}
+    .idbtn{font-size:22px;}
 
     /* the area menu becomes a sheet that slides up from the bottom */
     .scrim{
@@ -306,8 +326,9 @@
 
   /* very small phones (320–360 px) */
   @media (max-width:360px){
-    .hero h1{font-size:26px;}
-    .card{padding:12px 12px 14px;}
+    .hero h1{font-size:24px;}
+    .card{padding:10px 12px 12px;}
+    .idbtn{font-size:20px;}
     .pack{padding:10px 10px 12px;}
     .card-name{font-size:18px;}
     .grid{gap:10px 12px;}
@@ -316,8 +337,7 @@
 
   /* short landscape screens (phones turned sideways): save vertical space */
   @media (max-height:500px) and (orientation:landscape){
-    .hero{padding-top:18px;}
-    .hero h1{font-size:26px;margin-bottom:14px;max-height:40px;}
+    .hero h1{font-size:24px;margin:0 0 12px;}
     .searchbox{height:50px;}
     .topbar{padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:8px;}
     .panel{max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);}
@@ -336,6 +356,7 @@
     .chip{padding:5px 6px 5px 14px;}
     .chip button{width:30px;height:30px;font-size:17px;}
     .more-btn{padding:13px 24px;font-size:13.5px;}
+    .idbtn{min-height:44px;}
     .searchbox{min-height:56px;}
   }
 
@@ -416,7 +437,8 @@
   const PACK_TITLE = "Package details";
   const TAIL_COLS  = ["notes"];       // shown full width at the bottom of the card, under the package box
 
-  const PAGE_SIZE  = 30;            // cards drawn at a time
+  const PAGE_SIZE  = 30;            // customers drawn at a time (more load by themselves as you scroll)
+  const AUTO_CLOSE_MS = 7000;       // an opened details dropdown closes by itself after this long without a response
   const REFRESH_MS = 5 * 60 * 1000; // quietly re-check the sheet every 5 minutes
 
   // Demo data (used when SCRIPT_URL is empty). Rows are deliberately NOT in cust_id1 order.
@@ -463,6 +485,7 @@
   // <search-core>
   let hay = [];             // normalized names of each customer joined by spaces, in list order
   let base = null;          // null = all customers, else the row positions allowed by the area filter
+  let all = null;           // [0, 1, 2 …] = everyone, in list order (made on first use)
   let lastQ = '', lastCand = null;
 
   const ASCII = /^[\x00-\x7f]*$/;
@@ -505,18 +528,23 @@
     });
     recs.sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);   // stable: equal ids keep sheet order
     hay = recs.map(x => x.h);
-    base = null; lastQ = ''; lastCand = null;
+    base = null; all = null; lastQ = ''; lastCand = null;
     return recs.map(x => x.r);
+  }
+
+  function allIdx(){
+    if (!all || all.length !== hay.length) all = Array.from({ length: hay.length }, (_, i) => i);
+    return all;
   }
 
   // Restricts every following search to these row positions (or null for everyone).
   function setBase(b){ base = b; lastQ = ''; lastCand = null; }
 
   // Returns { q, toks, idx } where idx = row positions in list order.
-  // With an empty query it returns the whole filtered list.
+  // With an empty query it returns the whole list (everyone, or everyone in the chosen area).
   function search(raw){
     const q = norm(raw);
-    if (!q){ lastQ = ''; lastCand = null; return { q:'', toks:[], idx: base || [] }; }
+    if (!q){ lastQ = ''; lastCand = null; return { q:'', toks:[], idx: base || allIdx() }; }
     const toks = q.split(' ');
     const src = (lastCand && lastQ && q.startsWith(lastQ)) ? lastCand : base;
     const n = src ? src.length : hay.length;
@@ -798,7 +826,6 @@
     const wide = v.length > 40;
     let val;
     if (v === '') val = '<div class="value empty">—</div>';
-    else if (i === idIdx) val = '<div class="value mono"><span class="idlink">' + esc(v) + '</span></div>';   // looks like a link, is not one
     else if (colKind[i] === 'price') val = '<div class="value mono">' + fmtPrice(v) + '</div>';
     else if (colKind[i] === 'phone') val = '<div class="value mono"><a href="tel:' + esc(v.replace(/[^\d+]/g, '')) + '">' + esc(v) + '</a></div>';
     else if (colKind[i] === 'mono') val = '<div class="value mono">' + esc(v) + '</div>';
@@ -806,16 +833,84 @@
     return '<div class="field' + (wide ? ' wide' : '') + '"><div class="label">' + esc(labelFor(i)) + '</div>' + val + '</div>';
   }
 
+  // One customer in the list: the name, then the customer ID (a big link-style button
+  // that opens the details) and the area. The details are filled in only when opened.
   function cardHtml(idx){
     const r = data[idx];
-    const fields = list => list.map(i => fieldHtml(i, show(r, i))).join('');
-    let html = '<article class="card"><div class="card-head"><div class="card-name">' + highlight(show(r, nameIdx)) + '</div></div>';
-    if (mainIdx.length) html += '<div class="grid">' + fields(mainIdx) + '</div>';
-    if (packIdx.length) html += '<section class="pack"><div class="pack-title">' + esc(PACK_TITLE) + '</div><div class="grid">' + fields(packIdx) + '</div></section>';
-    if (tailIdx.length) html += '<div class="grid tail">' + fields(tailIdx) + '</div>';
-    return html + '</article>';
+    const idv = idIdx >= 0 ? show(r, idIdx) : '';
+    const btn = '<button class="idbtn" type="button" aria-expanded="false" aria-controls="d' + idx + '">' +
+                '<span class="idtext">' + esc(idv || 'Details') + '</span><span class="caret" aria-hidden="true"></span></button>';
+    let top = '<div class="field">' + (idv ? '<div class="label">' + esc(labelFor(idIdx)) + '</div>' : '') + '<div class="value">' + btn + '</div></div>';
+    if (areaIdx >= 0){
+      const a = show(r, areaIdx);
+      top += '<div class="field"><div class="label">' + esc(labelFor(areaIdx)) + '</div><div class="value' + (a ? '' : ' empty') + '">' + (a ? esc(a) : '—') + '</div></div>';
+    }
+    return '<article class="card" data-i="' + idx + '"><div class="card-head"><div class="card-name">' + highlight(show(r, nameIdx)) + '</div></div>' +
+           '<div class="card-top">' + top + '</div><div class="details" id="d' + idx + '" hidden></div></article>';
   }
 
+  // Everything else about the customer: phone (and any other fields), the package box, notes.
+  function detailsHtml(idx){
+    const r = data[idx];
+    const fields = list => list.map(i => fieldHtml(i, show(r, i))).join('');
+    const rest = mainIdx.filter(i => i !== idIdx && i !== areaIdx);     // the ID and area are already in the row
+    let h = '';
+    if (rest.length) h += '<div class="grid">' + fields(rest) + '</div>';
+    if (packIdx.length) h += '<section class="pack"><div class="pack-title">' + esc(PACK_TITLE) + '</div><div class="grid">' + fields(packIdx) + '</div></section>';
+    if (tailIdx.length) h += '<div class="grid tail">' + fields(tailIdx) + '</div>';
+    return h || '<div class="none">No more details.</div>';
+  }
+
+  // ---------------- the details dropdown ----------------
+  // One customer is open at a time. It closes when its ID is tapped again, when another
+  // ID is tapped, on Esc, or by itself after AUTO_CLOSE_MS (7 s) without any response
+  // (tapping, moving the mouse, scrolling or typing on that customer starts the 7 s again).
+  let openIdx = -1, openTimer = 0;
+  const calmMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function resetOpen(){ clearTimeout(openTimer); openIdx = -1; }     // the list was redrawn: nothing is open
+  function armTimer(){ clearTimeout(openTimer); openTimer = setTimeout(closeOpen, AUTO_CLOSE_MS); }
+
+  function closeOpen(){
+    if (openIdx < 0) return;
+    clearTimeout(openTimer);
+    const card = resultsEl.querySelector('.card[data-i="' + openIdx + '"]');
+    openIdx = -1;
+    if (!card) return;
+    const det = card.querySelector('.details');
+    const heightBefore = card.offsetHeight;
+    const scrolledPast = card.getBoundingClientRect().bottom <= 0;   // card is above the screen: keep what you see in place
+    det.hidden = true; det.innerHTML = '';
+    card.classList.remove('open');
+    card.querySelector('.idbtn').setAttribute('aria-expanded', 'false');
+    if (scrolledPast) window.scrollBy(0, card.offsetHeight - heightBefore);
+  }
+
+  function toggleCard(card){
+    const idx = +card.dataset.i;
+    if (openIdx === idx){ closeOpen(); return; }
+    closeOpen();
+    const det = card.querySelector('.details');
+    det.innerHTML = detailsHtml(idx);
+    det.hidden = false;
+    card.classList.add('open');
+    card.querySelector('.idbtn').setAttribute('aria-expanded', 'true');
+    openIdx = idx;
+    armTimer();
+    card.scrollIntoView({ block:'nearest', behavior: calmMotion() ? 'auto' : 'smooth' });   // make sure the details are on screen
+  }
+
+  resultsEl.addEventListener('click', e => {
+    const b = e.target.closest('.idbtn');
+    if (b) toggleCard(b.closest('.card'));
+  });
+  // any response on the open customer starts the 7 seconds again
+  ['pointerdown','pointermove','wheel','touchstart','touchmove','keydown','focusin'].forEach(ev =>
+    resultsEl.addEventListener(ev, e => {
+      if (openIdx >= 0 && e.target.closest && e.target.closest('.card.open')) armTimer();
+    }, { passive:true }));
+
+  // ---------------- the list ----------------
   function renderBatch(){
     const end = Math.min(shown + PAGE_SIZE, results.length);
     let html = '';
@@ -827,42 +922,41 @@
     if (left > 0) moreBtn.textContent = 'Show ' + Math.min(PAGE_SIZE, left) + ' more (' + left.toLocaleString('en-IN') + ' left)';
   }
 
+  // The list keeps loading by itself as you scroll (the button is only a fallback).
+  function fillViewport(){
+    for (let n = 0; n < 40 && shown < results.length && moreBtn.getBoundingClientRect().top < window.innerHeight + 800; n++) renderBatch();
+  }
+  if ('IntersectionObserver' in window) new IntersectionObserver(fillViewport, { rootMargin:'800px 0px' }).observe(moreBtn);
+
   function run(){
     const raw = input.value;
+    resetOpen();
     resultsEl.innerHTML = ''; moreBtn.hidden = true; shown = 0; results = []; curRe = null;
     app.classList.toggle('has-text', raw !== '');
     const filtered = !!selArea;
 
-    if (!ready){
-      app.classList.toggle('has-query', raw.trim() !== '' || filtered);
-      metaEl.textContent = (raw.trim() !== '' || filtered) ? 'Loading customers…' : '';
-      return;
-    }
+    if (!ready){ metaEl.textContent = 'Loading customers…'; return; }
 
     const t0 = performance.now();
-    const s = search(raw);                       // empty query + area chosen → everyone in that area
+    const s = search(raw);            // no text → everyone (or everyone in the chosen area), in cust_id1 order
     const ms = performance.now() - t0;
-    const active = s.q !== '' || filtered;
-    app.classList.toggle('has-query', active);
-
-    if (!active){ metaEl.textContent = count() + ' customers'; return; }
-
     results = s.idx;
     if (s.q) curRe = new RegExp('(' + s.toks.slice().sort((a, b) => b.length - a.length).map(escRe).join('|') + ')', 'giu');
     const n = results.length;
 
     if (!n){
-      metaEl.textContent = '0 matches';
+      metaEl.textContent = s.q ? '0 matches' : '0 customers';
       resultsEl.innerHTML = s.q
         ? '<div class="none">No customer found for “' + esc(raw.trim()) + '”' + (filtered ? ' in this area' : '') +
           '.<br>Check the spelling, or try fewer letters.</div>'
-        : '<div class="none">No customers in this area yet.</div>';
+        : '<div class="none">' + (filtered ? 'No customers in this area yet.' : 'No customers in the sheet yet.') + '</div>';
       return;
     }
     metaEl.textContent = s.q
       ? n.toLocaleString('en-IN') + (n === 1 ? ' match' : ' matches') + ' in ' + (ms < 1 ? '<1' : ms.toFixed(0)) + ' ms'
       : n.toLocaleString('en-IN') + (n === 1 ? ' customer' : ' customers');
     renderBatch();
+    fillViewport();
   }
 
   // run() at most once per frame, however fast keys arrive
@@ -871,10 +965,11 @@
 
   input.addEventListener('input', schedule);
   clearBtn.addEventListener('click', () => { input.value = ''; run(); input.focus(); });
-  moreBtn.addEventListener('click', renderBatch);
+  moreBtn.addEventListener('click', () => { renderBatch(); fillViewport(); });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape'){
       if (panelOpen){ closePanel(); plusBtn.focus(); }
+      else if (openIdx >= 0) closeOpen();
       else if (document.activeElement === input && input.value){ input.value = ''; run(); }
     } else if (e.key === '/' && document.activeElement !== input && !e.metaKey && !e.ctrlKey){
       e.preventDefault(); input.focus();
