@@ -71,12 +71,15 @@
     padding:0 max(20px,env(safe-area-inset-right,0px)) calc(90px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));
   }
 
-  .hero{padding-top:6px;}
+  .hero{padding-top:19vh;padding-top:clamp(28px,18dvh,170px);transition:padding-top .28s ease;}
+  .has-query .hero{padding-top:6px;}
   .hero h1{
-    font-family:'Fraunces',serif;font-weight:600;font-size:32px;line-height:1.2;
+    font-family:'Fraunces',serif;font-weight:600;font-size:36px;line-height:1.15;
     color:var(--accent);
-    text-align:center;margin:4px 0 18px;
+    text-align:center;margin:0 0 24px;max-height:60px;overflow:hidden;
+    transition:opacity .2s ease, max-height .28s ease, margin .28s ease;
   }
+  .has-query .hero h1{opacity:0;max-height:0;margin:0;}
 
   .searchwrap{position:relative;}
   .searchbox{
@@ -168,6 +171,7 @@
     margin-bottom:10px;
   }
   .card-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
     padding-bottom:12px;margin-bottom:14px;
     border-bottom:1px solid var(--paper-line);
   }
@@ -186,20 +190,29 @@
 
   /* collapsed row: name, then the customer ID (big, blue, link-style) and the area */
   .card-top{display:grid;grid-template-columns:auto 1fr;gap:0 32px;align-items:start;}
-  .card-top .value{min-height:40px;display:flex;align-items:center;}
+  .card-top .value{min-height:30px;display:flex;align-items:center;}
+  /* 1) the customer ID: link-style (blue, underlined). Size = the old 14px + 2px */
   .idbtn{
-    display:inline-flex;align-items:center;gap:8px;margin:0;padding:0;
-    border:0;background:none;cursor:pointer;
-    font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600;line-height:1.2;
+    margin:0;padding:0;border:0;background:none;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;line-height:1.4;
     color:#0b57d0;text-align:left;
   }
-  .idtext{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:4px;}
-  .caret{
-    width:8px;height:8px;flex:none;
-    border-right:2px solid currentColor;border-bottom:2px solid currentColor;
-    transform:rotate(45deg) translateY(-2px);transition:transform .15s ease;
+  .idtext{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px;}
+
+  /* the dropdown arrow: a separate button at the right end of the name line */
+  .toggle{
+    flex:none;width:36px;height:36px;padding:0;
+    border:1px solid var(--paper-line);border-radius:50%;background:#fff;color:var(--ink-soft);cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
   }
-  .idbtn[aria-expanded="true"] .caret{transform:rotate(225deg) translateY(-2px);}
+  .caret{
+    width:9px;height:9px;flex:none;
+    border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+    transform:rotate(45deg) translate(-1px,-1px);transition:transform .15s ease;
+  }
+  .toggle[aria-expanded="true"]{background:rgba(255,97,21,.12);border-color:rgba(255,97,21,.45);color:var(--accent-deep);}
+  .toggle[aria-expanded="true"] .caret{transform:rotate(225deg) translate(-1px,-1px);}
   .card.open{border-color:rgba(255,97,21,.5);box-shadow:0 6px 22px rgba(35,35,35,.08);}
   #results{overflow-anchor:none;}   /* we keep the scroll position steady ourselves when a card closes */
 
@@ -257,6 +270,7 @@
     .value a:hover{border-bottom-color:var(--accent);}
     .more-btn:hover{background:var(--ink);color:var(--bg);}
     .idbtn:hover .idtext{text-decoration-thickness:2.5px;}
+    .toggle:hover{background:var(--paper);}
   }
 
   /* card details: 3 columns once the card is wide enough */
@@ -270,7 +284,7 @@
             padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));}
     .brand{font-size:20px;}
     main{max-width:780px;}
-    .hero h1{font-size:36px;}
+    .hero h1{font-size:40px;max-height:68px;}
     .searchbox{height:62px;padding-left:26px;}
     .searchbox input{font-size:18px;}
     .panel{width:min(380px,100%);}
@@ -287,12 +301,11 @@
     .right{gap:8px;}
     .langbtn{height:32px;padding:0 11px 0 8px;font-size:13px;}
     main{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));}
-    .hero h1{font-size:28px;}
+    .hero h1{font-size:30px;}
     .searchbox{height:54px;}
     .searchbox input{font-size:16px;}   /* 16px stops iPhone auto-zoom */
     .card{padding:12px 14px 12px;}
     .grid{gap:12px 16px;}
-    .idbtn{font-size:22px;}
 
     /* the area menu becomes a sheet that slides up from the bottom */
     .scrim{
@@ -326,9 +339,8 @@
 
   /* very small phones (320–360 px) */
   @media (max-width:360px){
-    .hero h1{font-size:24px;}
+    .hero h1{font-size:26px;}
     .card{padding:10px 12px 12px;}
-    .idbtn{font-size:20px;}
     .pack{padding:10px 10px 12px;}
     .card-name{font-size:18px;}
     .grid{gap:10px 12px;}
@@ -337,7 +349,8 @@
 
   /* short landscape screens (phones turned sideways): save vertical space */
   @media (max-height:500px) and (orientation:landscape){
-    .hero h1{font-size:24px;margin:0 0 12px;}
+    .hero{padding-top:18px;}
+    .hero h1{font-size:26px;margin-bottom:14px;max-height:40px;}
     .searchbox{height:50px;}
     .topbar{padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:8px;}
     .panel{max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);}
@@ -357,6 +370,7 @@
     .chip button{width:30px;height:30px;font-size:17px;}
     .more-btn{padding:13px 24px;font-size:13.5px;}
     .idbtn{min-height:44px;}
+    .toggle{width:44px;height:44px;}
     .searchbox{min-height:56px;}
   }
 
@@ -416,7 +430,7 @@
   // 1) Paste your deployed Apps Script Web app URL below.
   //    Leave blank to try the page with built-in demo data.
   // ============================================================
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdZbQpZlIo4DLsv449D6TijeoJ8i2Ubka3pDY-9jvEUEgXi614XgCvGpZ2o0lFEuto/exec";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
+  const SCRIPT_URL = "";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
 
   const NAME_COL     = "cust_name";   // main name column (searched, and shown as the card heading)
   const AREA_COL     = "area";        // the filter behind the + button
@@ -438,7 +452,7 @@
   const TAIL_COLS  = ["notes"];       // shown full width at the bottom of the card, under the package box
 
   const PAGE_SIZE  = 30;            // customers drawn at a time (more load by themselves as you scroll)
-  const AUTO_CLOSE_MS = 7000;       // an opened details dropdown closes by itself after this long without a response
+  const AUTO_CLOSE_MS = 5000;       // an opened details dropdown closes by itself after this long without a response (5 s)
   const REFRESH_MS = 5 * 60 * 1000; // quietly re-check the sheet every 5 minutes
 
   // Demo data (used when SCRIPT_URL is empty). Rows are deliberately NOT in cust_id1 order.
@@ -485,7 +499,6 @@
   // <search-core>
   let hay = [];             // normalized names of each customer joined by spaces, in list order
   let base = null;          // null = all customers, else the row positions allowed by the area filter
-  let all = null;           // [0, 1, 2 …] = everyone, in list order (made on first use)
   let lastQ = '', lastCand = null;
 
   const ASCII = /^[\x00-\x7f]*$/;
@@ -528,23 +541,18 @@
     });
     recs.sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);   // stable: equal ids keep sheet order
     hay = recs.map(x => x.h);
-    base = null; all = null; lastQ = ''; lastCand = null;
+    base = null; lastQ = ''; lastCand = null;
     return recs.map(x => x.r);
-  }
-
-  function allIdx(){
-    if (!all || all.length !== hay.length) all = Array.from({ length: hay.length }, (_, i) => i);
-    return all;
   }
 
   // Restricts every following search to these row positions (or null for everyone).
   function setBase(b){ base = b; lastQ = ''; lastCand = null; }
 
   // Returns { q, toks, idx } where idx = row positions in list order.
-  // With an empty query it returns the whole list (everyone, or everyone in the chosen area).
+  // With an empty query it returns the whole filtered list (everyone in the chosen area).
   function search(raw){
     const q = norm(raw);
-    if (!q){ lastQ = ''; lastCand = null; return { q:'', toks:[], idx: base || allIdx() }; }
+    if (!q){ lastQ = ''; lastCand = null; return { q:'', toks:[], idx: base || [] }; }
     const toks = q.split(' ');
     const src = (lastCand && lastQ && q.startsWith(lastQ)) ? lastCand : base;
     const n = src ? src.length : hay.length;
@@ -833,20 +841,23 @@
     return '<div class="field' + (wide ? ' wide' : '') + '"><div class="label">' + esc(labelFor(i)) + '</div>' + val + '</div>';
   }
 
-  // One customer in the list: the name, then the customer ID (a big link-style button
-  // that opens the details) and the area. The details are filled in only when opened.
+  // One customer in the list: the name with the dropdown arrow at the right end of the same line,
+  // then the customer ID (link-style: clicking it opens the details too) and the area.
+  // The details are filled in only when opened.
   function cardHtml(idx){
     const r = data[idx];
     const idv = idIdx >= 0 ? show(r, idIdx) : '';
-    const btn = '<button class="idbtn" type="button" aria-expanded="false" aria-controls="d' + idx + '">' +
-                '<span class="idtext">' + esc(idv || 'Details') + '</span><span class="caret" aria-hidden="true"></span></button>';
-    let top = '<div class="field">' + (idv ? '<div class="label">' + esc(labelFor(idIdx)) + '</div>' : '') + '<div class="value">' + btn + '</div></div>';
+    const arrow = '<button class="toggle" type="button" aria-expanded="false" aria-controls="d' + idx + '" aria-label="Customer details">' +
+                  '<span class="caret" aria-hidden="true"></span></button>';
+    let top = '';
+    if (idv) top += '<div class="field"><div class="label">' + esc(labelFor(idIdx)) + '</div><div class="value">' +
+                    '<button class="idbtn" type="button" aria-expanded="false" aria-controls="d' + idx + '"><span class="idtext">' + esc(idv) + '</span></button></div></div>';
     if (areaIdx >= 0){
       const a = show(r, areaIdx);
       top += '<div class="field"><div class="label">' + esc(labelFor(areaIdx)) + '</div><div class="value' + (a ? '' : ' empty') + '">' + (a ? esc(a) : '—') + '</div></div>';
     }
-    return '<article class="card" data-i="' + idx + '"><div class="card-head"><div class="card-name">' + highlight(show(r, nameIdx)) + '</div></div>' +
-           '<div class="card-top">' + top + '</div><div class="details" id="d' + idx + '" hidden></div></article>';
+    return '<article class="card" data-i="' + idx + '"><div class="card-head"><div class="card-name">' + highlight(show(r, nameIdx)) + '</div>' + arrow + '</div>' +
+           (top ? '<div class="card-top">' + top + '</div>' : '') + '<div class="details" id="d' + idx + '" hidden></div></article>';
   }
 
   // Everything else about the customer: phone (and any other fields), the package box, notes.
@@ -862,9 +873,9 @@
   }
 
   // ---------------- the details dropdown ----------------
-  // One customer is open at a time. It closes when its ID is tapped again, when another
-  // ID is tapped, on Esc, or by itself after AUTO_CLOSE_MS (7 s) without any response
-  // (tapping, moving the mouse, scrolling or typing on that customer starts the 7 s again).
+  // One customer is open at a time. It closes when its ID or arrow is tapped again, when another
+  // ID is tapped, on Esc, or by itself after AUTO_CLOSE_MS (5 s) without any response
+  // (tapping, moving the mouse, scrolling or typing on that customer starts the 5 s again).
   let openIdx = -1, openTimer = 0;
   const calmMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -882,7 +893,7 @@
     const scrolledPast = card.getBoundingClientRect().bottom <= 0;   // card is above the screen: keep what you see in place
     det.hidden = true; det.innerHTML = '';
     card.classList.remove('open');
-    card.querySelector('.idbtn').setAttribute('aria-expanded', 'false');
+    card.querySelectorAll('.idbtn, .toggle').forEach(b => b.setAttribute('aria-expanded', 'false'));
     if (scrolledPast) window.scrollBy(0, card.offsetHeight - heightBefore);
   }
 
@@ -894,17 +905,17 @@
     det.innerHTML = detailsHtml(idx);
     det.hidden = false;
     card.classList.add('open');
-    card.querySelector('.idbtn').setAttribute('aria-expanded', 'true');
+    card.querySelectorAll('.idbtn, .toggle').forEach(b => b.setAttribute('aria-expanded', 'true'));
     openIdx = idx;
     armTimer();
     card.scrollIntoView({ block:'nearest', behavior: calmMotion() ? 'auto' : 'smooth' });   // make sure the details are on screen
   }
 
   resultsEl.addEventListener('click', e => {
-    const b = e.target.closest('.idbtn');
+    const b = e.target.closest('.idbtn, .toggle');      // the customer ID and the arrow both open / close the details
     if (b) toggleCard(b.closest('.card'));
   });
-  // any response on the open customer starts the 7 seconds again
+  // any response on the open customer starts the 5 seconds again
   ['pointerdown','pointermove','wheel','touchstart','touchmove','keydown','focusin'].forEach(ev =>
     resultsEl.addEventListener(ev, e => {
       if (openIdx >= 0 && e.target.closest && e.target.closest('.card.open')) armTimer();
@@ -935,21 +946,30 @@
     app.classList.toggle('has-text', raw !== '');
     const filtered = !!selArea;
 
-    if (!ready){ metaEl.textContent = 'Loading customers…'; return; }
+    if (!ready){
+      app.classList.toggle('has-query', raw.trim() !== '' || filtered);
+      metaEl.textContent = (raw.trim() !== '' || filtered) ? 'Loading customers…' : '';
+      return;
+    }
 
     const t0 = performance.now();
-    const s = search(raw);            // no text → everyone (or everyone in the chosen area), in cust_id1 order
+    const s = search(raw);            // customers are shown only while searching: text typed, or an area chosen
     const ms = performance.now() - t0;
+    const active = s.q !== '' || filtered;
+    app.classList.toggle('has-query', active);
+
+    if (!active){ metaEl.textContent = count() + ' customers'; return; }
+
     results = s.idx;
     if (s.q) curRe = new RegExp('(' + s.toks.slice().sort((a, b) => b.length - a.length).map(escRe).join('|') + ')', 'giu');
     const n = results.length;
 
     if (!n){
-      metaEl.textContent = s.q ? '0 matches' : '0 customers';
+      metaEl.textContent = '0 matches';
       resultsEl.innerHTML = s.q
         ? '<div class="none">No customer found for “' + esc(raw.trim()) + '”' + (filtered ? ' in this area' : '') +
           '.<br>Check the spelling, or try fewer letters.</div>'
-        : '<div class="none">' + (filtered ? 'No customers in this area yet.' : 'No customers in the sheet yet.') + '</div>';
+        : '<div class="none">No customers in this area yet.</div>';
       return;
     }
     metaEl.textContent = s.q
