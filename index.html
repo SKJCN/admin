@@ -65,6 +65,15 @@
   }
   .langbtn svg{width:18px;height:18px;flex:none;}
 
+  /* profile icon: opens the "add a customer" page */
+  .profile{
+    flex:none;width:34px;height:34px;border-radius:50%;
+    border:1.5px solid var(--accent);background:rgba(255,97,21,.12);color:var(--accent-deep);
+    display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
+    transition:background .15s ease;
+  }
+  .profile svg{width:20px;height:20px;}
+
   /* ---------- search ---------- */
   main{
     max-width:720px;margin:0 auto;
@@ -263,6 +272,7 @@
   @media (hover:hover){
     button.refresh:hover{background:var(--ink);color:var(--bg);}
     .langbtn:hover{background:rgba(255,97,21,.22);}
+    .profile:hover{background:rgba(255,97,21,.22);}
     .plus:hover{background:var(--paper-line);}
     .clear:hover{background:var(--paper-line);}
     .opt:hover{background:var(--paper);}
@@ -362,6 +372,7 @@
   /* touch screens: comfortable 44 px tap targets */
   @media (pointer:coarse){
     .langbtn{height:44px;padding:0 15px 0 12px;font-size:14px;}
+    .profile{width:44px;height:44px;}
     button.refresh{width:44px;height:44px;border-radius:10px;}
     .plus{width:44px;height:44px;}
     .clear{width:40px;height:40px;}
@@ -392,6 +403,9 @@
     </button>
     <div class="status" id="status"><span class="dot"></span><span id="statusText">connecting…</span></div>
     <button class="refresh" id="refreshBtn" aria-label="Reload customer list" title="Reload customer list">↻</button>
+    <a class="profile" id="profileLink" href="add-customer.html" aria-label="Add a customer" title="Add a customer">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm0 2.2c-3 0-9 1.5-9 4.5V21h18v-2.3c0-3-6-4.5-9-4.5z"/></svg>
+    </a>
   </div>
 </div>
 
@@ -430,7 +444,7 @@
   // 1) Paste your deployed Apps Script Web app URL below.
   //    Leave blank to try the page with built-in demo data.
   // ============================================================
-  const SCRIPT_URL = "";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdZbQpZlIo4DLsv449D6TijeoJ8i2Ubka3pDY-9jvEUEgXi614XgCvGpZ2o0lFEuto/exec";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
 
   const NAME_COL     = "cust_name";   // main name column (searched, and shown as the card heading)
   const AREA_COL     = "area";        // the filter behind the + button
@@ -438,6 +452,8 @@
   const ID_COL       = "cust_id2";    // the customer ID that is shown (styled like a link, but it is not one)
   const SORT_COL     = "cust_id1";    // the list is arranged by this column (it is never shown)
   const DEFAULT_LANG = "te";          // page opens in Telugu ("en" for English)
+  const PACK_KEY     = "pack_id";    // links a customer to a package in the Packages tab
+  const ADD_PAGE     = "add-customer.html";   // the page behind the profile icon
 
   // English column → its Telugu column. In Telugu mode the Telugu value is shown
   // (English is used if the Telugu cell is empty). The Telugu columns are never
@@ -456,18 +472,29 @@
   const REFRESH_MS = 5 * 60 * 1000; // quietly re-check the sheet every 5 minutes
 
   // Demo data (used when SCRIPT_URL is empty). Rows are deliberately NOT in cust_id1 order.
+  // "packages" is the Packages tab: package details are typed there once, customers only carry the pack_id.
   const DEMO = {
-    headers: ["cust_id1","cust_id2","cust_name","cust_name_te","phone","area","area_te","pack_id","pack_speed","pack_type","pack_price_month","months","discount","notes","notes_te"],
+    headers: ["cust_id1","cust_id2","cust_name","cust_name_te","phone","area","area_te","pack_id","notes","notes_te"],
+    packages: {
+      headers: ["pack_id","pack_speed","pack_type","pack_price_month","months","discount"],
+      rows: [
+        ["P01","30 Mbps","Basic","499","1","0%"],        ["P02","50 Mbps","Standard","699","1","0%"],
+        ["P03","100 Mbps","Fibre","999","1","0%"],       ["P04","200 Mbps","Unlimited","1499","1","0%"],
+        ["P05","50 Mbps","Standard","699","6","5%"],     ["P06","100 Mbps","Fibre","999","6","10%"],
+        ["P07","100 Mbps","Fibre","999","12","15%"],     ["P08","200 Mbps","Unlimited","1499","12","15%"]
+      ]
+    },
+    config: { needsPasscode: false },
     updated: 0,
     rows: [
-      ["1003","SK2043","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Gandhi Nagar","గాంధీ నగర్","P01","30 Mbps","Basic","499","1","0%","",""],
-      ["1001","SK1187","Ravi Kumar","రవి కుమార్","9876543210","Gandhi Nagar","గాంధీ నగర్","P03","100 Mbps","Fibre","999","12","10%","Prefers evening visits","సాయంత్రం రావడం ఇష్టం"],
-      ["1007","SK3310","Kiran Kumar","కిరణ్ కుమార్","9811122233","Main Road","మెయిన్ రోడ్","P02","50 Mbps","Standard","699","6","5%","",""],
-      ["1002","SK0921","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapeta","కొత్తపేట","P04","200 Mbps","Unlimited","1499","12","15%","Static IP","స్టాటిక్ ఐపీ"],
-      ["1005","SK2760","Suresh Babu","సురేష్ బాబు","9345612780","Kothapeta","కొత్తపేట","P02","50 Mbps","Standard","699","3","0%","",""],
-      ["1004","SK1544","Venkata Ramana Rao","వెంకట రమణ రావు","9000011122","Main Road","మెయిన్ రోడ్","P04","200 Mbps","Unlimited","1499","12","10%","Router replaced","రూటర్ మార్చారు"],
-      ["1006","SK0408","Priya Chowdary","ప్రియ చౌదరి","9700012345","Gandhi Nagar","గాంధీ నగర్","P03","100 Mbps","Fibre","999","6","5%","",""],
-      ["1008","SK2891","Anitha Sharma","అనిత శర్మ","9922233344","Kothapeta","కొత్తపేట","P01","30 Mbps","Basic","499","1","0%","",""]
+      ["1003","SK2043","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Gandhi Nagar","గాంధీ నగర్","P01","",""],
+      ["1001","SK1187","Ravi Kumar","రవి కుమార్","9876543210","Gandhi Nagar","గాంధీ నగర్","P07","Prefers evening visits","సాయంత్రం రావడం ఇష్టం"],
+      ["1007","SK3310","Kiran Kumar","కిరణ్ కుమార్","9811122233","Main Road","మెయిన్ రోడ్","P05","",""],
+      ["1002","SK0921","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapeta","కొత్తపేట","P08","Static IP","స్టాటిక్ ఐపీ"],
+      ["1005","SK2760","Suresh Babu","సురేష్ బాబు","9345612780","Kothapeta","కొత్తపేట","P02","",""],
+      ["1004","SK1544","Venkata Ramana Rao","వెంకట రమణ రావు","9000011122","Main Road","మెయిన్ రోడ్","P08","Router replaced","రూటర్ మార్చారు"],
+      ["1006","SK0408","Priya Chowdary","ప్రియ చౌదరి","9700012345","Gandhi Nagar","గాంధీ నగర్","P06","",""],
+      ["1008","SK2891","Anitha Sharma","అనిత శర్మ","9922233344","Kothapeta","కొత్తపేట","P03","",""]
     ]
   };
 
@@ -626,9 +653,41 @@
   const count = () => data.length.toLocaleString('en-IN');
   const clock = () => new Date().toLocaleTimeString();
 
-  // Loads a { headers, rows } payload.
+  // Joins the Packages tab onto the customers. For every customer, the details of the package with the same
+  // pack_id (speed, type, price, months, discount …) are added as extra columns, so the cards show them
+  // exactly as if they were typed in the Customers tab. A value typed in the Customers tab itself wins.
+  function joinPackages(d){
+    const ch = (d.headers || []).map(x => String(x).trim());
+    const pk = d.packages;
+    if (!pk || !pk.headers || !pk.rows) return { headers: ch, rows: d.rows || [] };       // no Packages tab: use the sheet as it is
+    const ph = pk.headers.map(x => String(x).trim());
+    const cl = ch.map(x => x.toLowerCase()), pl = ph.map(x => x.toLowerCase());
+    const cId = cl.indexOf(PACK_KEY), pId = pl.indexOf(PACK_KEY);
+    if (cId < 0 || pId < 0) return { headers: ch, rows: d.rows || [] };
+    const idKey = v => String(v == null ? '' : v).trim().toLowerCase();
+    const byId = new Map();
+    pk.rows.forEach(r => { const k = idKey(r[pId]); if (k && !byId.has(k)) byId.set(k, r); });
+    const headers = ch.slice(), map = [];                        // map: [column in Packages, column in the joined rows]
+    pl.forEach((k, j) => {
+      if (j === pId || !ph[j]) return;
+      let c = cl.indexOf(k);
+      if (c < 0){ headers.push(ph[j]); c = headers.length - 1; }
+      map.push([j, c]);
+    });
+    const rows = (d.rows || []).map(r => {
+      const out = r.slice();
+      while (out.length < headers.length) out.push('');
+      const pr = byId.get(idKey(r[cId]));
+      if (pr) map.forEach(([j, c]) => { if (out[c] === '' || out[c] == null) out[c] = pr[j] == null ? '' : pr[j]; });
+      return out;
+    });
+    return { headers, rows };
+  }
+
+  // Loads a { headers, rows, packages } payload.
   function setData(d){
-    const h = (d.headers || []).map(x => String(x).trim());
+    const joined = joinPackages(d);
+    const h = joined.headers;
     const low = h.map(x => x.toLowerCase());
     const ni = low.indexOf(NAME_COL);
     if (ni < 0){
@@ -663,7 +722,7 @@
     input.placeholder = ph;
     input.setAttribute('aria-label', ph);
 
-    rawRows = d.rows || [];
+    rawRows = joined.rows;
     ready = true;
     plusBtn.hidden = areaIdx < 0;                       // no area column → no + button
     rebuild();
@@ -1050,6 +1109,7 @@
 
   async function init(){
     updateLangBtn();
+    $('profileLink').href = ADD_PAGE + (SCRIPT_URL ? '?u=' + encodeURIComponent(SCRIPT_URL) : '');   // the add page uses the same web app
     if (!SCRIPT_URL){
       $('setupBanner').hidden = false;
       setData(DEMO);
