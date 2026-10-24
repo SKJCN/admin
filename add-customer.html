@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SKJCN - Add a customer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Noto+Sans+Telugu:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --paper:#F6F1E4;
+    --paper-line:#DCD5C3;
+    --card:#FFFDF8;
+    --ink:#232323;
+    --ink-soft:#5B564B;
+    --ink-faint:#8E8878;
+    --accent:#ff6115;
+    --accent-deep:#C2410C;
+    --unpaid-red:#B23A2E;
+  }
+  *{box-sizing:border-box;}
+  [hidden]{display:none !important;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Inter','Noto Sans Telugu',sans-serif;
+    min-height:100vh;min-height:100dvh;
+  }
+  button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 12px;
+    padding:calc(12px + env(safe-area-inset-top,0px)) max(22px,env(safe-area-inset-right,0px)) 12px max(22px,env(safe-area-inset-left,0px));
+  }
+  .back{
+    display:inline-flex;align-items:center;gap:8px;min-height:44px;
+    color:var(--accent-deep);font-weight:600;font-size:15px;text-decoration:none;
+  }
+  .back svg{width:18px;height:18px;}
+  .brand{font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--accent);}
+  .status{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);text-align:right;line-height:1.4;}
+  .status .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#9a9584;margin-right:6px;}
+  .status.live .dot{background:var(--accent);}
+  .status.error .dot{background:var(--unpaid-red);}
+
+  /* ---------- page ---------- */
+  main{
+    max-width:760px;margin:0 auto;
+    padding:8px max(20px,env(safe-area-inset-right,0px)) calc(70px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));
+  }
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:34px;line-height:1.2;color:var(--accent);margin:6px 0 6px;}
+  .lead{margin:0 0 22px;color:var(--ink-soft);font-size:15px;line-height:1.5;}
+  .banner{
+    background:#FBF6E9;border:1px solid #E8DDB0;border-radius:10px;
+    padding:14px 16px;margin:0 0 20px;font-size:13.5px;line-height:1.6;
+  }
+  .banner code{background:#F0E9D2;padding:2px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+
+  /* ---------- form ---------- */
+  .group{
+    background:var(--card);border:1px solid var(--paper-line);border-radius:14px;
+    padding:18px 18px 20px;margin-bottom:16px;
+  }
+  .group h2{font-size:16px;font-weight:600;line-height:1.4;color:var(--accent-deep);margin:0 0 14px;}
+  .fields{display:grid;grid-template-columns:1fr;gap:16px;}
+  .field{min-width:0;}
+  .field.wide{grid-column:1 / -1;}
+  label{display:block;font-size:13px;font-weight:500;color:var(--ink-soft);margin-bottom:6px;line-height:1.4;}
+  .req{color:var(--accent-deep);}
+  input,select,textarea{
+    width:100%;min-height:48px;padding:12px 14px;
+    font:inherit;font-size:16px;color:var(--ink);   /* 16px stops iPhone auto-zoom */
+    background:#fff;border:1px solid var(--paper-line);border-radius:12px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  textarea{min-height:80px;resize:vertical;line-height:1.5;}
+  input::placeholder,textarea::placeholder{color:var(--ink-faint);}
+  input:focus,select:focus,textarea:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,97,21,.16);
+  }
+  .field.invalid input,.field.invalid select,.field.invalid textarea{border-color:var(--unpaid-red);}
+  .hint{font-size:12.5px;color:var(--ink-faint);margin-top:6px;line-height:1.4;}
+  .err{font-size:13px;color:var(--unpaid-red);margin-top:6px;line-height:1.4;}
+  .err:empty{display:none;}
+  input[lang="te"],textarea[lang="te"]{font-family:'Noto Sans Telugu','Inter',sans-serif;}
+
+  /* the chosen package, shown read-only (same look as on the customer card) */
+  .pack{
+    margin-top:16px;padding:12px 14px 14px;
+    background:rgba(255,97,21,.05);border:1px solid rgba(255,97,21,.25);border-radius:12px;
+  }
+  .pack-title{font-size:12.5px;font-weight:600;line-height:1.4;color:var(--accent-deep);margin-bottom:10px;}
+  .pack-empty{font-size:14px;color:var(--ink-soft);line-height:1.5;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+  .pl{font-size:12.5px;color:var(--ink-soft);margin-bottom:2px;line-height:1.5;}
+  .pv{font-size:15px;line-height:1.5;overflow-wrap:anywhere;}
+  .pv.mono{font-family:'IBM Plex Mono',monospace;font-size:14px;}
+
+  .actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:8px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:0 26px;border-radius:999px;
+    font:inherit;font-size:16px;font-weight:600;line-height:1;cursor:pointer;text-decoration:none;
+    border:1.5px solid transparent;
+  }
+  .btn.primary{background:var(--accent-deep);color:#fff;}
+  .btn.secondary{background:#fff;color:var(--ink);border-color:var(--ink);}
+  .btn:disabled{opacity:.6;cursor:default;}
+  .msg{margin-top:14px;font-size:14.5px;line-height:1.5;}
+  .msg.error{color:var(--unpaid-red);}
+  .msg.info{color:var(--ink-soft);}
+
+  /* ---------- saved ---------- */
+  .done{background:var(--card);border:1px solid rgba(255,97,21,.4);border-radius:14px;padding:22px 20px 24px;}
+  .tick{
+    width:44px;height:44px;border-radius:50%;background:rgba(255,97,21,.14);color:var(--accent-deep);
+    display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;
+  }
+  .tick svg{width:24px;height:24px;}
+  .done h2{font-family:'Fraunces',serif;font-weight:600;font-size:24px;line-height:1.3;color:var(--accent);margin:0 0 4px;}
+  .done p{margin:0 0 16px;color:var(--ink-soft);font-size:15px;line-height:1.5;}
+  .summary{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;margin:0 0 20px;}
+  .summary .wide{grid-column:1 / -1;}
+
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;}
+
+  @media (min-width:640px){
+    .fields{grid-template-columns:1fr 1fr;}
+    .grid{grid-template-columns:repeat(3,1fr);}
+    .summary{grid-template-columns:repeat(3,1fr);}
+  }
+  @media (min-width:561px) and (max-width:1024px){
+    .topbar{padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));}
+    main{max-width:780px;}
+    .group{padding:22px 24px 24px;}
+  }
+  @media (max-width:560px){
+    h1{font-size:28px;}
+    main{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));}
+    .topbar{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));}
+    .group{padding:16px 14px 18px;}
+    .actions .btn{flex:1 1 100%;}
+    .status{font-size:11px;}
+  }
+  @media (max-width:360px){
+    h1{font-size:25px;}
+    .group{padding:14px 12px 16px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" id="backLink" href="customer-search.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    Search customers
+  </a>
+  <div class="status" id="status"><span class="dot"></span><span id="statusText">connecting…</span></div>
+</div>
+
+<main>
+  <div class="banner" id="demoBanner" hidden>
+    Demo mode: no sheet is connected, so nothing you enter here is saved. Open this page from the
+    profile icon on the search page, or paste your Apps Script Web app URL into <code>SCRIPT_URL</code>
+    near the top of the <code>&lt;script&gt;</code> section of this file.
+  </div>
+
+  <h1>Add a customer</h1>
+  <p class="lead">Fill in the details below. The customer is saved straight into your Google Sheet.</p>
+
+  <form id="form" novalidate>
+    <div id="groups"></div>
+
+    <div class="group" id="passGroup" hidden>
+      <div class="field">
+        <label for="passcode">Passcode <span class="req" aria-hidden="true">*</span></label>
+        <input id="passcode" type="password" autocomplete="off" placeholder="The passcode set in the sheet's script">
+        <div class="err" id="e_passcode"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="saveBtn" type="submit" disabled>Save customer</button>
+    </div>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  </form>
+
+  <section class="done" id="done" hidden aria-live="polite">
+    <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2 id="doneTitle">Customer saved</h2>
+    <p id="doneNote"></p>
+    <div class="summary" id="summary"></div>
+    <div class="actions">
+      <button class="btn primary" id="againBtn" type="button">Add another customer</button>
+      <a class="btn secondary" id="searchLink" href="customer-search.html">Search customers</a>
+    </div>
+  </section>
+</main>
+
+<script>
+  // ============================================================
+  // The Apps Script Web app URL. Normally you do NOT need to paste it here: the profile icon on the
+  // search page opens this page with the same URL already attached. Paste it only if you open this page directly.
+  // ============================================================
+  const SCRIPT_URL  = "";
+  const SEARCH_PAGE = "customer-search.html";
+
+  // Sheet columns that must be filled in before a customer can be saved
+  const REQUIRED = ["cust_name", "cust_id2", "phone", "area", "pack_id"];
+
+  // How each column is asked for. Columns not listed here simply get a plain text box (label made from the header).
+  const FIELD = {
+    cust_id1:     { label:"Customer number",  type:"number", min:"1", hint:"Numbered automatically when you save. Type your own number only if you need a specific one." },
+    cust_id2:     { label:"Customer ID",      ph:"e.g. SK1187", hint:"The ID shown on the customer's card. It must be new." },
+    cust_name:    { label:"Name",             ph:"e.g. Ravi Kumar", caps:"words" },
+    cust_name_te: { label:"Name in Telugu",   te:true, ph:"ఉదా: రవి కుమార్" },
+    alt_name:     { label:"Alternate name",   hint:"A nickname or shop name (optional)." },
+    alt_name_te:  { label:"Alternate name in Telugu", te:true },
+    phone:        { label:"Phone",            type:"tel", ph:"10-digit number" },
+    area:         { label:"Area",             list:true, ph:"Choose an area or type a new one", caps:"words" },
+    area_te:      { label:"Area in Telugu",   te:true, hint:"Filled in automatically for an area that already exists." },
+    pack_id:      { label:"Package",          select:true },
+    notes:        { label:"Notes",            textarea:true, wide:true },
+    notes_te:     { label:"Notes in Telugu",  te:true, textarea:true, wide:true }
+  };
+  const PACK_LABELS = { pack_speed:"Speed", pack_type:"Type", pack_price:"Price", pack_price_month:"Price / month", months:"Months", discount:"Discount" };
+
+  // Demo data (used when no web app URL is available)
+  const DEMO = {
+    headers: ["cust_id1","cust_id2","cust_name","cust_name_te","phone","area","area_te","pack_id","notes","notes_te"],
+    rows: [
+      ["1001","SK1187","Ravi Kumar","రవి కుమార్","9876543210","Gandhi Nagar","గాంధీ నగర్","P07","",""],
+      ["1002","SK0921","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapeta","కొత్తపేట","P08","",""],
+      ["1003","SK2043","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Main Road","మెయిన్ రోడ్","P01","",""]
+    ],
+    packages: {
+      headers: ["pack_id","pack_speed","pack_type","pack_price_month","months","discount"],
+      rows: [["P01","30 Mbps","Basic","499","1","0%"],["P02","50 Mbps","Standard","699","1","0%"],["P03","100 Mbps","Fibre","999","1","0%"],["P04","200 Mbps","Unlimited","1499","1","0%"],
+             ["P05","50 Mbps","Standard","699","6","5%"],["P06","100 Mbps","Fibre","999","6","10%"],["P07","100 Mbps","Fibre","999","12","15%"],["P08","200 Mbps","Unlimited","1499","12","15%"]]
+    },
+    config: { needsPasscode: false }
+  };
+
+  // ---------------------------------------------------------------
+  const $ = id => document.getElementById(id);
+  const form = $('form'), groupsEl = $('groups'), saveBtn = $('saveBtn'), msgEl = $('msg'), doneEl = $('done');
+  const url = new URLSearchParams(location.search).get('u') || SCRIPT_URL;
+
+  const ESC = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ESC[c]);
+  const norm = v => String(v == null ? '' : v).trim().toLowerCase().replace(/\s+/g, ' ');
+  const pretty = h => { const s = h.replace(/_/g, ' ').trim(); return s.charAt(0).toUpperCase() + s.slice(1); };
+  const fmtPrice = v => { const n = Number(v); return isNaN(n) ? esc(v) : '₹' + n.toLocaleString('en-IN'); };
+
+  let headers = [], rows = [], pack = null, needsPasscode = false;
+  let areaMap = new Map();          // area (lower case) → { en, te }
+  let nextNumber = 1, ready = false;
+
+  function setStatus(mode, text){ $('status').className = 'status ' + mode; $('statusText').textContent = text; }
+  function setMsg(text, kind){ msgEl.textContent = text || ''; msgEl.className = 'msg' + (kind ? ' ' + kind : ''); }
+
+  // ---------------- what the sheet already has ----------------
+  const col = name => headers.findIndex(h => h.toLowerCase() === name);
+
+  function learn(){
+    const ia = col('area'), it = col('area_te'), i1 = col('cust_id1');
+    areaMap = new Map(); nextNumber = 1;
+    let max = 0;
+    rows.forEach(r => {
+      if (ia >= 0 && norm(r[ia])){
+        const k = norm(r[ia]), e = areaMap.get(k);
+        const te = it >= 0 ? String(r[it] || '').trim() : '';
+        if (!e) areaMap.set(k, { en: String(r[ia]).trim(), te });
+        else if (!e.te && te) e.te = te;
+      }
+      if (i1 >= 0){ const n = Number(r[i1]); if (!isNaN(n) && n > max) max = n; }
+    });
+    nextNumber = Math.floor(max) + 1;
+  }
+
+  const packCols = () => pack && pack.headers ? pack.headers.map(h => String(h).trim()) : [];
+  const packRows = () => pack && pack.rows ? pack.rows : [];
+  const packById = id => { const pi = packCols().findIndex(h => h.toLowerCase() === 'pack_id'); return pi < 0 ? null : packRows().find(r => norm(r[pi]) === norm(id)) || null; };
+
+  // the text of one package in the drop-down, e.g.  P07 — 100 Mbps · Fibre · ₹999 · 12 · 15%
+  function packLabel(r){
+    const ph = packCols(); const pi = ph.findIndex(h => h.toLowerCase() === 'pack_id');
+    const parts = [];
+    ph.forEach((h, j) => {
+      if (j === pi || !String(r[j] == null ? '' : r[j]).trim()) return;
+      const k = h.toLowerCase(), v = String(r[j]).trim();
+      parts.push(k.includes('price') ? '₹' + (isNaN(Number(v)) ? v : Number(v).toLocaleString('en-IN')) + '/month'
+               : k === 'months' ? v + (v === '1' ? ' month' : ' months')
+               : k === 'discount' ? v + ' off' : v);
+    });
+    return String(r[pi]).trim() + (parts.length ? ' — ' + parts.join(' · ') : '');
+  }
+
+  // ---------------- building the form from the sheet's headers ----------------
+  const isPackOverride = k => k !== 'pack_id' && (k.startsWith('pack_') || k === 'months' || k === 'discount');
+  function groupOf(k){
+    if (['cust_id1','cust_id2','cust_name','cust_name_te','alt_name','alt_name_te','phone'].includes(k)) return 'Customer';
+    if (k === 'area' || k === 'area_te') return 'Area';
+    if (k === 'pack_id' || isPackOverride(k)) return 'Package';
+    if (k.startsWith('notes')) return 'Notes';
+    return 'More details';
+  }
+
+  function fieldHtml(h){
+    const k = h.toLowerCase(), f = FIELD[k] || {};
+    const id = 'f_' + k, req = REQUIRED.includes(k);
+    const label = f.label || (PACK_LABELS[k] ? PACK_LABELS[k] : pretty(h));
+    const common = ' id="' + id + '" data-h="' + esc(h) + '" autocomplete="off"' + (f.te ? ' lang="te" spellcheck="false"' : '') +
+                   (req ? ' aria-required="true"' : '') + ' aria-describedby="e_' + k + '"';
+    let control;
+    if (f.select && pack && packRows().length){
+      const pi = packCols().findIndex(x => x.toLowerCase() === 'pack_id');
+      control = '<select' + common + '><option value="">Choose a package…</option>' +
+        packRows().map(r => '<option value="' + esc(String(r[pi]).trim()) + '">' + esc(packLabel(r)) + '</option>').join('') + '</select>';
+    } else if (f.textarea){
+      control = '<textarea' + common + ' rows="2"' + (f.ph ? ' placeholder="' + esc(f.ph) + '"' : '') + '></textarea>';
+    } else {
+      control = '<input' + common + ' type="' + (f.type || 'text') + '"' + (f.min ? ' min="' + f.min + '"' : '') +
+        (f.type === 'tel' ? ' inputmode="tel"' : '') + (f.type === 'number' ? ' inputmode="numeric"' : '') +
+        (f.list ? ' list="areaList"' : '') + (f.caps ? ' autocapitalize="' + f.caps + '"' : '') +
+        (f.ph ? ' placeholder="' + esc(f.ph) + '"' : '') + '>';
+    }
+    let hint = f.hint || '';
+    if (isPackOverride(k)) hint = "Leave empty to use the package's value.";
+    return '<div class="field' + (f.wide ? ' wide' : '') + '" data-k="' + k + '">' +
+           '<label for="' + id + '">' + esc(label) + (req ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>' +
+           control + (hint ? '<div class="hint">' + esc(hint) + '</div>' : '') + '<div class="err" id="e_' + k + '"></div></div>';
+  }
+
+  function renderForm(){
+    const order = ['Customer','Area','Package','Notes','More details'];
+    const by = {}; order.forEach(g => by[g] = []);
+    headers.forEach(h => { if (h) by[groupOf(h.toLowerCase())].push(h); });
+    let html = '';
+    order.forEach(g => {
+      if (!by[g].length) return;
+      html += '<section class="group"><h2>' + esc(g) + '</h2><div class="fields">' + by[g].map(fieldHtml).join('') + '</div>' +
+              (g === 'Package' && col('pack_id') >= 0 && pack ? '<div class="pack" id="packBox"></div>' : '') + '</section>';
+    });
+    html += '<datalist id="areaList">' + [...areaMap.values()].sort((a, b) => a.en.localeCompare(b.en)).map(a => '<option value="' + esc(a.en) + '"></option>').join('') + '</datalist>';
+    groupsEl.innerHTML = html;
+    resetValues();
+    showPack();
+  }
+
+  const ctl = h => groupsEl.querySelector('[data-h="' + h.replace(/"/g, '\\"') + '"]');
+  const ctlBy = k => { const h = headers.find(x => x.toLowerCase() === k); return h ? ctl(h) : null; };
+
+  function resetValues(){
+    groupsEl.querySelectorAll('[data-h]').forEach(el => { el.value = ''; delete el.dataset.auto; });
+    const n = ctlBy('cust_id1'); if (n){ n.value = String(nextNumber); n.dataset.auto = '1'; }   // a suggestion: the sheet gives the real number when saving
+    $('passcode').value = (() => { try { return sessionStorage.getItem('skjcn-pass') || ''; } catch (e) { return ''; } })();
+  }
+
+  // the chosen package, read-only, under the drop-down
+  function showPack(){
+    const box = $('packBox'); if (!box) return;
+    const sel = ctlBy('pack_id');
+    const r = sel && sel.value ? packById(sel.value) : null;
+    const ph = packCols(), pi = ph.findIndex(h => h.toLowerCase() === 'pack_id');
+    if (!r){ box.innerHTML = '<div class="pack-title">Package details</div><div class="pack-empty">Choose a package to see its details.</div>'; }
+    else {
+      const cells = ph.map((h, j) => {
+        if (j === pi) return '';
+        const k = h.toLowerCase(), v = String(r[j] == null ? '' : r[j]).trim();
+        return '<div><div class="pl">' + esc(PACK_LABELS[k] || pretty(h)) + '</div><div class="pv' + (k.includes('price') ? ' mono' : '') + '">' +
+               (v ? (k.includes('price') ? fmtPrice(v) : esc(v)) : '—') + '</div></div>';
+      }).join('');
+      box.innerHTML = '<div class="pack-title">Package details · ' + esc(String(r[pi]).trim()) + '</div><div class="grid">' + cells + '</div>';
+    }
+    // the package's own values show as hints in the optional override boxes
+    headers.forEach(h => {
+      const k = h.toLowerCase(); if (!isPackOverride(k)) return;
+      const el = ctl(h); if (!el) return;
+      const j = ph.findIndex(x => x.toLowerCase() === k);
+      el.placeholder = r && j >= 0 && String(r[j] || '').trim() ? 'Package: ' + String(r[j]).trim() : '';
+    });
+  }
+
+  // ---------------- live helpers ----------------
+  form.addEventListener('input', e => {
+    const el = e.target; if (!el.dataset || !el.dataset.h) { if (el.id === 'passcode') $('e_passcode').textContent = ''; return; }
+    clearError(el.dataset.h.toLowerCase());
+    const k = el.dataset.h.toLowerCase();
+    if (k === 'area'){                                   // an area that already exists: fill in its Telugu name
+      const known = areaMap.get(norm(el.value)), te = ctlBy('area_te');
+      if (te && known && known.te && (!te.value || te.dataset.auto === '1')){ te.value = known.te; te.dataset.auto = '1'; }
+      else if (te && te.dataset.auto === '1' && !known){ te.value = ''; delete te.dataset.auto; }
+    } else if (k === 'area_te' || k === 'cust_id1'){ delete el.dataset.auto; }
+  });
+  form.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.h && e.target.dataset.h.toLowerCase() === 'pack_id') showPack(); });
+
+  function setError(k, text){
+    const f = groupsEl.querySelector('.field[data-k="' + k + '"]');
+    if (f){ f.classList.add('invalid'); const e = f.querySelector('.err'); if (e) e.textContent = text; }
+  }
+  function clearError(k){
+    const f = groupsEl.querySelector('.field[data-k="' + k + '"]');
+    if (f){ f.classList.remove('invalid'); const e = f.querySelector('.err'); if (e) e.textContent = ''; }
+  }
+
+  // ---------------- checking and saving ----------------
+  function collect(){
+    const c = {};
+    groupsEl.querySelectorAll('[data-h]').forEach(el => {
+      const k = el.dataset.h.toLowerCase();
+      let v = el.value.trim();
+      if (k === 'phone') v = v.replace(/[\s-]/g, '');
+      if (k === 'cust_id1' && el.dataset.auto === '1') v = '';      // untouched suggestion: let the sheet number it when saving
+      c[el.dataset.h] = v;
+    });
+    // an area that already exists is saved with its existing spelling (and Telugu name), so the area filter never shows it twice
+    const ha = headers.find(x => x.toLowerCase() === 'area'), ht = headers.find(x => x.toLowerCase() === 'area_te');
+    if (ha && c[ha]){
+      const known = areaMap.get(norm(c[ha]));
+      if (known){ c[ha] = known.en; if (ht && !c[ht] && known.te) c[ht] = known.te; }
+      else c[ha] = c[ha].replace(/\s+/g, ' ');
+    }
+    return c;
+  }
+
+  function validate(c){
+    const problems = [];                                 // [[column, message], …]
+    const v = k => { const h = headers.find(x => x.toLowerCase() === k); return h ? (c[h] || '') : ''; };
+    REQUIRED.forEach(k => { if (col(k) >= 0 && !v(k)) problems.push([k, (FIELD[k] ? FIELD[k].label : pretty(k)) + ' is required.']); });
+    if (v('phone') && !/^\+?\d{7,15}$/.test(v('phone'))) problems.push(['phone', 'Enter a valid phone number (digits only, 7 to 15).']);
+    const i2 = col('cust_id2');
+    if (v('cust_id2') && i2 >= 0 && rows.some(r => norm(r[i2]) === norm(v('cust_id2')))) problems.push(['cust_id2', 'This Customer ID is already used.']);
+    const i1 = col('cust_id1');
+    if (v('cust_id1') && i1 >= 0 && rows.some(r => norm(r[i1]) === norm(v('cust_id1')))) problems.push(['cust_id1', 'This customer number is already used.']);
+    if (v('cust_id1') && !/^\d+$/.test(v('cust_id1'))) problems.push(['cust_id1', 'Use a whole number.']);
+    return problems;
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!ready) return;
+    headers.forEach(h => clearError(h.toLowerCase()));
+    setMsg('');
+    const c = collect(), problems = validate(c);
+    if (needsPasscode && !$('passcode').value.trim()){ $('e_passcode').textContent = 'Enter the passcode.'; problems.push(['passcode', '']); }
+    if (problems.length){
+      problems.forEach(([k, m]) => { if (k !== 'passcode') setError(k, m); });
+      const first = problems[0][0] === 'passcode' ? $('passcode') : ctlBy(problems[0][0]);
+      if (first) first.focus();
+      setMsg('Please fix the ' + (problems.length === 1 ? 'highlighted field.' : problems.length + ' highlighted fields.'), 'error');
+      return;
+    }
+
+    saveBtn.disabled = true; setMsg('Saving to the sheet…', 'info');
+    try {
+      let res;
+      if (!url){ await new Promise(r => setTimeout(r, 500)); res = { status:'ok', demo:true, cust_id1: c[headers.find(h => h.toLowerCase() === 'cust_id1')] || '', row: rows.length + 2 }; }
+      else {
+        const r = await fetch(url, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },     // plain text: no browser pre-check needed
+                                     body: JSON.stringify({ action:'addCustomer', passcode: $('passcode').value.trim(), customer: c }) });
+        res = await r.json();
+      }
+      if (res.status !== 'ok') return failed(res);
+      try { if (needsPasscode) sessionStorage.setItem('skjcn-pass', $('passcode').value.trim()); } catch (err) {}
+      saved(c, res);
+    } catch (err){
+      console.error(err);
+      setMsg('Could not confirm that it was saved (check your internet connection). Before trying again, search for the customer, so you don\'t add them twice.', 'error');
+      saveBtn.disabled = false;
+    }
+  });
+
+  function failed(res){
+    saveBtn.disabled = false;
+    if (res.code === 'passcode'){ try { sessionStorage.removeItem('skjcn-pass'); } catch (e) {} $('e_passcode').textContent = 'Wrong passcode.'; $('passcode').focus(); setMsg('The passcode was not accepted.', 'error'); return; }
+    if (res.field){ setError(res.field, res.message); const el = ctlBy(res.field); if (el) el.focus(); }
+    setMsg(res.message || 'Could not save.', 'error');
+  }
+
+  // after a successful save: remember the customer locally (so duplicates are caught without reloading) and show a summary
+  function saved(c, res){
+    const row = headers.map(h => c[h] != null ? c[h] : '');
+    const i1 = col('cust_id1'); if (i1 >= 0 && res.cust_id1) row[i1] = String(res.cust_id1);
+    if (!res.demo) rows.push(row);
+    learn();
+    const v = k => { const h = headers.find(x => x.toLowerCase() === k); return h ? (c[h] || '') : ''; };
+    const pid = v('pack_id'), pr = pid ? packById(pid) : null;
+    const items = [['Name', v('cust_name')], ['Customer ID', v('cust_id2')], ['Customer number', res.cust_id1 || v('cust_id1')],
+                   ['Phone', v('phone')], ['Area', v('area')], ['Package', pr ? packLabel(pr) : pid]].filter(x => x[1]);
+    $('summary').innerHTML = items.map(([l, t]) => '<div' + (l === 'Package' ? ' class="wide"' : '') + '><div class="pl">' + esc(l) + '</div><div class="pv">' + esc(t) + '</div></div>').join('');
+    $('doneTitle').textContent = res.demo ? 'Demo only: nothing was saved' : 'Customer saved';
+    $('doneNote').textContent = res.demo ? 'No sheet is connected, so this was only a test of the form.'
+      : v('cust_name') + ' was added to the sheet (row ' + res.row + '). They will show up when you search.';
+    form.hidden = true; doneEl.hidden = false; window.scrollTo(0, 0); $('againBtn').focus();
+    saveBtn.disabled = false; setMsg('');
+  }
+
+  $('againBtn').addEventListener('click', () => {
+    doneEl.hidden = true; form.hidden = false;
+    renderForm();                                        // fresh form: next customer number, updated area list
+    const first = ctlBy('cust_name') || groupsEl.querySelector('[data-h]'); if (first) first.focus();
+    window.scrollTo(0, 0);
+  });
+
+  // ---------------- loading the sheet's headers, areas and packages ----------------
+  function setup(d){
+    headers = (d.headers || []).map(x => String(x).trim());
+    rows = d.rows || []; pack = d.packages || null; needsPasscode = !!(d.config && d.config.needsPasscode);
+    if (col('cust_name') < 0){ setStatus('error', 'column "cust_name" not found in the sheet'); return; }
+    learn(); renderForm();
+    $('passGroup').hidden = !needsPasscode;
+    ready = true; saveBtn.disabled = false;
+    setStatus('live', rows.length.toLocaleString('en-IN') + ' customers' + (pack ? ', ' + packRows().length + ' packages' : '') + ' in the sheet');
+    if (!pack) setMsg('No "Packages" tab was found in the sheet, so the package is typed in as plain text.', 'info');
+  }
+
+  async function init(){
+    $('searchLink').href = $('backLink').href = SEARCH_PAGE;
+    if (!url){
+      $('demoBanner').hidden = false; setup(DEMO); setStatus('', 'demo data, not connected'); return;
+    }
+    try {
+      const r = await fetch(url); const d = await r.json();
+      if (!d || !d.headers) throw new Error('unexpected reply from the script');
+      setup(d);
+    } catch (err){
+      console.error(err);
+      setStatus('error', 'could not reach the sheet');
+      setMsg('Could not load the sheet, so the form cannot be filled in yet. Check the web app URL and your internet connection, then reload this page.', 'error');
+    }
+  }
+  init();
+</script>
+</body>
+</html>
