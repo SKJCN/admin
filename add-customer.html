@@ -103,6 +103,14 @@
   .total span{font-weight:700;}
   .total b{font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;}
   .group[hidden],.actions[hidden]{display:none;}
+  .addons{margin-top:16px;}
+  .addons-title{font-size:13px;font-weight:500;color:var(--ink-soft);margin-bottom:8px;}
+  .addon{margin-bottom:10px;}
+  .addon-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .chk{display:inline-flex;align-items:center;gap:10px;margin:0;min-height:48px;padding:0 16px;border:1px solid var(--paper-line);border-radius:12px;background:#fff;font-size:16px;font-weight:600;color:var(--ink);cursor:pointer;}
+  .chk input{width:22px;min-height:22px;height:22px;padding:0;margin:0;accent-color:var(--accent-deep);cursor:pointer;}
+  .addon .amt{flex:1 1 160px;width:auto;}
+  .how{font-size:12.5px;color:var(--ink-soft);margin-top:12px;line-height:1.4;}
   .group.reveal{animation:stepin .22s ease;}
   @keyframes stepin{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
   .pack-empty{font-size:14px;color:var(--ink-soft);line-height:1.5;}
@@ -275,13 +283,22 @@
   const num = v => { const t = String(v == null ? '' : v).replace(/[₹,\s]/g, ''); return t === '' || isNaN(Number(t)) ? null : Number(t); };
   const rupees = n => '₹' + n.toLocaleString('en-IN');
   const fmtMoney = v => { const n = num(v); return n === null ? esc(v) : rupees(n); };
-  function packTotal(r){
-    const ph = packCols().map(h => h.toLowerCase());
-    const at = k => { const j = ph.indexOf(k); return j < 0 ? null : num(r[j]); };
-    const price = at('pack_price_month') !== null ? at('pack_price_month') : at('pack_price');
+  // Total price = ((package price per month + TV + ANT) x months) - discount.
+  // A value typed in the optional override boxes (months, discount, price...) wins over the package's value.
+  const ADDONS = ['tv', 'ant'];
+  const packVal = (r, k) => { const j = packCols().findIndex(h => h.toLowerCase() === k); return r && j >= 0 ? num(r[j]) : null; };
+  const boxVal = k => { const el = ctlBy(k); return el && el.value.trim() !== '' ? num(el.value) : null; };
+  const addonOn = k => { const c = $('chk_' + k); return !!(c && c.checked); };
+  const addonAmt = k => { const el = $('amt_' + k); return el ? (num(el.value) || 0) : 0; };
+  function calcTotal(){
+    const sel = ctlBy('pack_id'), r = sel && sel.value ? packById(sel.value) : null;
+    const pick = (...ks) => { for (const k of ks){ const b = boxVal(k); if (b !== null) return b; } for (const k of ks){ const p = packVal(r, k); if (p !== null) return p; } return null; };
+    const price = pick('pack_price_month', 'pack_price');
     if (price === null) return null;
-    const months = at('months') === null ? 1 : at('months'), d = at('discount') || 0;
-    return price * months - d;
+    const months = pick('months') === null ? 1 : pick('months'), discount = pick('discount') || 0;
+    const tv = addonOn('tv') ? addonAmt('tv') : 0, ant = addonOn('ant') ? addonAmt('ant') : 0;
+    const total = Math.round(((price + tv + ant) * months - discount) * 100) / 100;
+    return { price, months, discount, tv, ant, total };
   }
   const fmtPrice = v => { const n = Number(v); return isNaN(n) ? esc(v) : '₹' + n.toLocaleString('en-IN'); };
 
@@ -326,19 +343,12 @@
   const packRows = () => pack && pack.rows ? pack.rows : [];
   const packById = id => { const pi = packCols().findIndex(h => h.toLowerCase() === 'pack_id'); return pi < 0 ? null : packRows().find(r => norm(r[pi]) === norm(id)) || null; };
 
-  // the text of one package in the drop-down, e.g.  P07 — 100 Mbps · Fibre · ₹999 · 12 · 15%
+  // the text of one package in the drop-down: only  pack_id — pack_speed · pack_type
   function packLabel(r){
-    const ph = packCols(); const pi = ph.findIndex(h => h.toLowerCase() === 'pack_id');
-    const parts = [];
-    ph.forEach((h, j) => {
-      if (j === pi || !String(r[j] == null ? '' : r[j]).trim()) return;
-      const k = h.toLowerCase(), v = String(r[j]).trim();
-      parts.push(k.includes('price') ? '₹' + (isNaN(Number(v)) ? v : Number(v).toLocaleString('en-IN')) + '/month'
-               : k === 'months' ? v + (v === '1' ? ' month' : ' months')
-               : k === 'discount' ? (num(v) === null ? v : rupees(num(v))) + ' off' : v);
-    });
-    const tot = packTotal(r); if (tot !== null) parts.push('Total ' + rupees(tot));
-    return String(r[pi]).trim() + (parts.length ? ' — ' + parts.join(' · ') : '');
+    const ph = packCols().map(h => h.toLowerCase());
+    const at = k => { const j = ph.indexOf(k); return j < 0 ? '' : String(r[j] == null ? '' : r[j]).trim(); };
+    const rest = [at('pack_speed'), at('pack_type')].filter(Boolean).join(' · ');
+    return at('pack_id') + (rest ? ' — ' + rest : '');
   }
 
   // ---------------- building the form from the sheet's headers ----------------
@@ -364,7 +374,7 @@
     } else if (f.select && pack && packRows().length){
       const pi = packCols().findIndex(x => x.toLowerCase() === 'pack_id');
       control = '<select' + common + '><option value="">Choose a package…</option>' +
-        packRows().map(r => '<option value="' + esc(String(r[pi]).trim()) + '">' + esc(packLabel(r)) + '</option>').join('') + '</select>';
+        packRows().filter(r => String(r[pi] == null ? '' : r[pi]).trim()).map(r => '<option value="' + esc(String(r[pi]).trim()) + '">' + esc(packLabel(r)) + '</option>').join('') + '</select>';
     } else if (f.textarea){
       control = '<textarea' + common + ' rows="2"' + (f.ph ? ' placeholder="' + esc(f.ph) + '"' : '') + '></textarea>';
     } else {
@@ -381,15 +391,41 @@
            control + (hint ? '<div class="hint">' + esc(hint) + '</div>' : '') + '<div class="err" id="e_' + k + '"></div></div>';
   }
 
+  const SPECIAL = ['tv', 'ant', 'total_price'];      // handled by the add-on boxes / calculated by the page
+  function addonsHtml(){
+    const on = ADDONS.filter(k => col(k) >= 0);
+    if (!on.length) return '';
+    return '<div class="addons"><div class="addons-title">Add-ons</div>' + on.map(k =>
+      '<div class="field addon" data-k="' + k + '"><div class="addon-row">' +
+      '<label class="chk" for="chk_' + k + '"><input type="checkbox" id="chk_' + k + '"><span>' + k.toUpperCase() + '</span></label>' +
+      '<input id="amt_' + k + '" class="amt" type="number" inputmode="decimal" min="0" step="any" placeholder="Amount ₹ per month" aria-label="' + k.toUpperCase() + ' amount" hidden>' +
+      '</div><div class="err" id="e_' + k + '"></div></div>').join('') + '</div>';
+  }
+
+  // tick an add-on: its amount box appears, filled from the pack tab's TV / ANT column when there is one
+  function syncAddons(e){
+    const t = e && e.target; if (!t || !t.id) return;
+    const k = t.id.startsWith('chk_') ? t.id.slice(4) : t.id.startsWith('amt_') ? t.id.slice(4) : null; if (!k) return;
+    const amt = $('amt_' + k); if (!amt) return;
+    if (t.id.startsWith('amt_')){ delete amt.dataset.auto; return; }
+    amt.hidden = !t.checked; clearError(k);
+    if (t.checked) fillAddon(k); else { amt.value = ''; delete amt.dataset.auto; }
+  }
+  function fillAddon(k){
+    const amt = $('amt_' + k); if (!amt || !addonOn(k)) return;
+    const sel = ctlBy('pack_id'), r = sel && sel.value ? packById(sel.value) : null, p = packVal(r, k);
+    if (!amt.value || amt.dataset.auto === '1'){ amt.value = p === null ? '' : String(p); if (p !== null) amt.dataset.auto = '1'; else delete amt.dataset.auto; }
+  }
+
   function renderForm(){
     const order = ['Customer','Area','Package','Notes','More details'];
     const by = {}; order.forEach(g => by[g] = []);
-    headers.forEach(h => { if (h) by[groupOf(h.toLowerCase())].push(h); });
+    headers.forEach(h => { if (h && !SPECIAL.includes(h.toLowerCase())) by[groupOf(h.toLowerCase())].push(h); });
     let html = '';
     order.forEach(g => {
       if (!by[g].length) return;
       html += '<section class="group"><h2>' + esc(g) + '</h2><div class="fields">' + by[g].map(fieldHtml).join('') + '</div>' +
-              (g === 'Package' && col('pack_id') >= 0 && pack ? '<div class="pack" id="packBox"></div>' : '') + '</section>';
+              (g === 'Package' ? addonsHtml() : '') + (g === 'Package' && col('pack_id') >= 0 && pack ? '<div class="pack" id="packBox"></div>' : '') + '</section>';
     });
     if (!villageList()) html += '<datalist id="areaList">' + [...areaMap.values()].sort((a, b) => a.en.localeCompare(b.en)).map(a => '<option value="' + esc(a.en) + '"></option>').join('') + '</datalist>';
     groupsEl.innerHTML = html;
@@ -418,8 +454,8 @@
     $('passGroup').hidden = !(needsPasscode && final);
     const act = form.querySelector('.actions'); if (act) act.hidden = !final;
   }
-  form.addEventListener('input', () => applySteps());
-  form.addEventListener('change', () => applySteps());
+  form.addEventListener('input', e => { syncAddons(e); showPack(); applySteps(); });
+  form.addEventListener('change', e => { syncAddons(e); if (e.target.dataset && e.target.dataset.h && e.target.dataset.h.toLowerCase() === 'pack_id') ADDONS.forEach(fillAddon); showPack(); applySteps(); });
 
   const ctl = h => groupsEl.querySelector('[data-h="' + h.replace(/"/g, '\\"') + '"]');
   const ctlBy = k => { const h = headers.find(x => x.toLowerCase() === k); return h ? ctl(h) : null; };
@@ -428,6 +464,15 @@
     groupsEl.querySelectorAll('[data-h]').forEach(el => { el.value = ''; delete el.dataset.auto; });
     const n = ctlBy('cust_id1'); if (n){ n.value = String(nextNumber); n.dataset.auto = '1'; }   // a suggestion: the sheet gives the real number when saving
     $('passcode').value = (() => { try { return sessionStorage.getItem('skjcn-pass') || ''; } catch (e) { return ''; } })();
+  }
+
+  function totalBlock(){
+    const t = calcTotal(); if (!t) return '';
+    const parts = ['Package ' + rupees(t.price)];
+    if (t.tv) parts.push('TV ' + rupees(t.tv));
+    if (t.ant) parts.push('ANT ' + rupees(t.ant));
+    const how = (parts.length > 1 ? '(' + parts.join(' + ') + ')' : parts[0]) + ' × ' + t.months + (t.months === 1 ? ' month' : ' months') + (t.discount ? ' − ' + rupees(t.discount) + ' discount' : '');
+    return '<div class="how">' + esc(how) + '</div><div class="total"><span>Total Amount</span><b>' + rupees(t.total) + '</b></div>';
   }
 
   // the chosen package, read-only, under the drop-down
@@ -439,13 +484,13 @@
     if (!r){ box.innerHTML = '<div class="pack-title">Package details</div><div class="pack-empty">Choose a package to see its details.</div>'; }
     else {
       const cells = ph.map((h, j) => {
-        if (j === pi) return '';
+        if (j === pi || ADDONS.includes(h.toLowerCase())) return '';
         const k = h.toLowerCase(), v = String(r[j] == null ? '' : r[j]).trim();
         return '<div><div class="pl">' + esc(PACK_LABELS[k] || pretty(h)) + '</div><div class="pv' + (k.includes('price') ? ' mono' : '') + '">' +
                (v ? (k.includes('price') ? fmtPrice(v) : k === 'discount' ? fmtMoney(v) : esc(v)) : '—') + '</div></div>';
       }).join('');
       box.innerHTML = '<div class="pack-title">Package details · ' + esc(String(r[pi]).trim()) + '</div><div class="grid">' + cells + '</div>' +
-        (packTotal(r) !== null ? '<div class="total"><span>Total Amount</span><b>' + rupees(packTotal(r)) + '</b></div>' : '');
+        totalBlock();
     }
     // the package's own values show as hints in the optional override boxes
     headers.forEach(h => {
@@ -488,6 +533,9 @@
       if (k === 'cust_id1' && el.dataset.auto === '1') v = '';      // untouched suggestion: let the sheet number it when saving
       c[el.dataset.h] = v;
     });
+    ADDONS.forEach(k => { const h = headers.find(x => x.toLowerCase() === k); if (h) c[h] = addonOn(k) ? String(addonAmt(k)) : ''; });
+    const ht2 = headers.find(x => x.toLowerCase() === 'total_price'), tt = calcTotal();
+    if (ht2) c[ht2] = tt ? String(tt.total) : '';
     // an area that already exists is saved with its existing spelling (and Telugu name), so the area filter never shows it twice
     const ha = headers.find(x => x.toLowerCase() === 'area'), ht = headers.find(x => x.toLowerCase() === 'area_te');
     if (ha && c[ha]){
@@ -503,6 +551,7 @@
     const v = k => { const h = headers.find(x => x.toLowerCase() === k); return h ? (c[h] || '') : ''; };
     REQUIRED.forEach(k => { if (col(k) >= 0 && !v(k)) problems.push([k, (FIELD[k] ? FIELD[k].label : pretty(k)) + ' is required.']); });
     if (v('phone') && !/^\+?\d{7,15}$/.test(v('phone'))) problems.push(['phone', 'Enter a valid phone number (digits only, 7 to 15).']);
+    ADDONS.forEach(k => { if (addonOn(k) && !($('amt_' + k).value.trim() !== '' && num($('amt_' + k).value) !== null)) problems.push([k, 'Enter the ' + k.toUpperCase() + ' amount.']); });
     const i2 = col('cust_id2');
     if (v('cust_id2') && i2 >= 0 && rows.some(r => norm(r[i2]) === norm(v('cust_id2')))) problems.push(['cust_id2', 'This Customer ID is already used.']);
     const i1 = col('cust_id1');
