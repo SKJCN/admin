@@ -1,31 +1,29 @@
 <!DOCTYPE html>
-<html lang="te">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SKJCN - Customer Search</title>
+<title>SKJCN - Add a customer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Noto+Sans+Telugu:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#ffffff;          /* page background */
-    --paper:#F6F1E4;       /* soft hover / button surface */
+    --bg:#ffffff;
+    --paper:#F6F1E4;
     --paper-line:#DCD5C3;
     --card:#FFFDF8;
     --ink:#232323;
     --ink-soft:#5B564B;
     --ink-faint:#8E8878;
-    --accent:#ff6115;       /* headings + highlights */
-    --accent-deep:#C2410C;  /* same hue, darker, for small text */
+    --accent:#ff6115;
+    --accent-deep:#C2410C;
     --unpaid-red:#B23A2E;
   }
   *{box-sizing:border-box;}
   [hidden]{display:none !important;}
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
   body{
-    margin:0;
-    background:var(--bg);
-    color:var(--ink);
+    margin:0;background:var(--bg);color:var(--ink);
     font-family:'Inter','Noto Sans Telugu',sans-serif;
     min-height:100vh;min-height:100dvh;
   }
@@ -33,1145 +31,590 @@
 
   /* ---------- top bar ---------- */
   .topbar{
-    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
-    gap:10px 12px;
-    padding:calc(16px + env(safe-area-inset-top,0px)) max(22px,env(safe-area-inset-right,0px)) 16px max(22px,env(safe-area-inset-left,0px));
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 12px;
+    padding:calc(12px + env(safe-area-inset-top,0px)) max(22px,env(safe-area-inset-right,0px)) 12px max(22px,env(safe-area-inset-left,0px));
   }
+  .back{
+    display:inline-flex;align-items:center;gap:8px;min-height:44px;
+    color:var(--accent-deep);font-weight:600;font-size:15px;text-decoration:none;
+  }
+  .back svg{width:18px;height:18px;}
   .brand{font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--accent);}
-  .right{display:flex;align-items:center;gap:12px;}
-  .status{
-    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);
-    text-align:right;line-height:1.4;
-  }
-  .status .dot{
-    display:inline-block;width:7px;height:7px;border-radius:50%;
-    background:#9a9584;margin-right:6px;
-  }
+  .status{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);text-align:right;line-height:1.4;}
+  .status .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#9a9584;margin-right:6px;}
   .status.live .dot{background:var(--accent);}
   .status.error .dot{background:var(--unpaid-red);}
-  button.refresh{
-    font-size:16px;background:transparent;border:2px solid var(--ink);color:var(--ink);
-    width:32px;height:32px;padding:0;border-radius:6px;cursor:pointer;
-    display:inline-flex;align-items:center;justify-content:center;line-height:1;
-  }
 
-  /* language switch: shows the language you will switch to, like a dark / light toggle */
-  .langbtn{
-    display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px 0 10px;
-    border:1.5px solid var(--accent);border-radius:999px;
-    background:rgba(255,97,21,.12);color:var(--accent-deep);
-    font:inherit;font-size:14px;font-weight:600;line-height:1;cursor:pointer;
-    transition:background .15s ease;
-  }
-  .langbtn svg{width:18px;height:18px;flex:none;}
-
-  /* profile icon: opens the "add a customer" page */
-  .profile{
-    flex:none;width:34px;height:34px;border-radius:50%;
-    border:1.5px solid var(--accent);background:rgba(255,97,21,.12);color:var(--accent-deep);
-    display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
-    transition:background .15s ease;
-  }
-  .profile svg{width:20px;height:20px;}
-
-  /* ---------- search ---------- */
+  /* ---------- page ---------- */
   main{
-    max-width:720px;margin:0 auto;
-    padding:0 max(20px,env(safe-area-inset-right,0px)) calc(90px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));
+    max-width:760px;margin:0 auto;
+    padding:8px max(20px,env(safe-area-inset-right,0px)) calc(70px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));
   }
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:34px;line-height:1.2;color:var(--accent);margin:6px 0 6px;}
+  .lead{margin:0 0 22px;color:var(--ink-soft);font-size:15px;line-height:1.5;}
+  .banner{
+    background:#FBF6E9;border:1px solid #E8DDB0;border-radius:10px;
+    padding:14px 16px;margin:0 0 20px;font-size:13.5px;line-height:1.6;
+  }
+  .banner code{background:#F0E9D2;padding:2px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
 
-  .hero{padding-top:19vh;padding-top:clamp(28px,18dvh,170px);transition:padding-top .28s ease;}
-  .has-query .hero{padding-top:6px;}
-  .hero h1{
-    font-family:'Fraunces',serif;font-weight:600;font-size:36px;line-height:1.15;
-    color:var(--accent);
-    text-align:center;margin:0 0 24px;max-height:60px;overflow:hidden;
-    transition:opacity .2s ease, max-height .28s ease, margin .28s ease;
+  /* ---------- form ---------- */
+  .group{
+    background:var(--card);border:1px solid var(--paper-line);border-radius:14px;
+    padding:18px 18px 20px;margin-bottom:16px;
   }
-  .has-query .hero h1{opacity:0;max-height:0;margin:0;}
-
-  .searchwrap{position:relative;}
-  .searchbox{
-    display:flex;align-items:center;height:58px;
-    padding:0 10px 0 22px;
-    background:#fff;
-    border:1px solid var(--paper-line);
-    border-radius:999px;
-    box-shadow:0 2px 14px rgba(35,35,35,.08);
-    transition:border-color .15s ease, box-shadow .15s ease;
-  }
-  .searchbox:focus-within{
-    border-color:var(--accent);
-    box-shadow:0 0 0 3px rgba(255,97,21,.16), 0 2px 14px rgba(35,35,35,.08);
-  }
-  .searchbox input{
-    flex:1;min-width:0;height:100%;
-    border:0;outline:0;background:transparent;
-    font:inherit;font-size:17px;color:var(--ink);
-    padding:0 8px 0 0;
-  }
-  .searchbox input::placeholder{color:var(--ink-faint);}
-
-  .plus{
-    width:40px;height:40px;flex:none;padding:0;
-    border:0;border-radius:50%;background:transparent;color:var(--ink-soft);cursor:pointer;
-    display:inline-flex;align-items:center;justify-content:center;
-    transition:background .15s ease, color .15s ease;
-  }
-  .plus svg{width:22px;height:22px;}
-  .plus[aria-expanded="true"]{background:var(--paper-line);}
-  .plus.on{background:rgba(255,97,21,.14);color:var(--accent-deep);}
-
-  .clear{
-    display:none;width:34px;height:34px;flex:none;
-    border:0;border-radius:50%;background:var(--paper);color:var(--ink-soft);
-    font-size:20px;line-height:1;cursor:pointer;
-    align-items:center;justify-content:center;
-  }
-  .has-text .clear{display:inline-flex;}
-
-  /* area / sub area menu: a dropdown under the + (tablet, desktop); a bottom sheet on phones */
-  .scrim{display:none;}
-  .panel{
-    position:absolute;right:0;top:calc(100% + 8px);z-index:30;
-    width:min(340px,100%);
-    max-height:min(56vh,400px);max-height:min(56dvh,400px);
-    overflow-y:auto;overscroll-behavior:contain;
-    background:#fff;border:1px solid var(--paper-line);border-radius:16px;
-    box-shadow:0 10px 32px rgba(35,35,35,.16);
-    padding:6px;text-align:left;
-  }
-  .panel-title{font-size:12.5px;color:var(--ink-soft);padding:8px 12px 6px;line-height:1.5;}
-  .opt{
-    display:flex;justify-content:space-between;align-items:center;gap:10px;
-    width:100%;text-align:left;border:0;background:transparent;
-    font:inherit;font-size:15px;line-height:1.5;color:var(--ink);
-    padding:9px 12px;border-radius:10px;cursor:pointer;
-    touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-  }
-  .opt:focus-visible{background:var(--paper);}
-  .opt.on{color:var(--accent-deep);font-weight:600;}
-  .opt.on::after{content:'✓';}
-
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 4px 0;}
-  .chip{
-    display:inline-flex;align-items:center;gap:6px;max-width:100%;
-    background:var(--card);border:1px solid var(--paper-line);border-radius:999px;
-    padding:4px 5px 4px 12px;font-size:13.5px;line-height:1.5;overflow-wrap:anywhere;
-  }
-  .chip .k{color:var(--ink-soft);}
-  .chip button{
-    width:22px;height:22px;flex:none;border:0;border-radius:50%;padding:0;
-    background:var(--paper);color:var(--ink-soft);font-size:15px;line-height:1;cursor:pointer;
-    display:inline-flex;align-items:center;justify-content:center;
-  }
-
-  .meta{
-    margin:18px 4px 12px;min-height:18px;
-    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);
-  }
-
-  /* ---------- result cards ---------- */
-  .card{
-    background:var(--card);
-    border:1px solid var(--paper-line);
-    border-radius:14px;
-    padding:14px 18px 14px;
-    margin-bottom:10px;
-  }
-  .card-head{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
-    padding-bottom:12px;margin-bottom:14px;
-    border-bottom:1px solid var(--paper-line);
-  }
-  .card-name{font-size:20px;font-weight:600;line-height:1.4;color:var(--accent);overflow-wrap:anywhere;}
-  .card-name mark{color:var(--accent-deep);}
-  mark{background:rgba(255,97,21,.18);color:inherit;border-radius:3px;padding:0 1px;}
-
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;}
+  .group h2{font-size:16px;font-weight:600;line-height:1.4;color:var(--accent-deep);margin:0 0 14px;}
+  .fields{display:grid;grid-template-columns:1fr;gap:16px;}
   .field{min-width:0;}
   .field.wide{grid-column:1 / -1;}
-  .label{font-size:12.5px;color:var(--ink-soft);margin-bottom:2px;line-height:1.5;}
-  .value{font-size:15px;line-height:1.5;overflow-wrap:anywhere;}
-  .value.mono{font-family:'IBM Plex Mono',monospace;font-size:14px;}
-  .value.empty{color:var(--ink-faint);}
-  .value a{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--paper-line);}
-
-  /* collapsed row: name, then the customer ID (big, blue, link-style) and the area */
-  .card-top{display:grid;grid-template-columns:auto 1fr;gap:0 32px;align-items:start;}
-  .card-top .value{min-height:30px;display:flex;align-items:center;}
-  /* 1) the customer ID: link-style (blue, underlined). Size = the old 14px + 2px */
-  .idbtn{
-    margin:0;padding:0;border:0;background:none;cursor:pointer;
-    font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;line-height:1.4;
-    color:#0b57d0;text-align:left;
+  label{display:block;font-size:13px;font-weight:500;color:var(--ink-soft);margin-bottom:6px;line-height:1.4;}
+  .req{color:var(--accent-deep);}
+  input,select,textarea{
+    width:100%;min-height:48px;padding:12px 14px;
+    font:inherit;font-size:16px;color:var(--ink);   /* 16px stops iPhone auto-zoom */
+    background:#fff;border:1px solid var(--paper-line);border-radius:12px;
+    transition:border-color .15s ease, box-shadow .15s ease;
   }
-  .idtext{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px;}
-
-  /* the dropdown arrow: a separate button at the right end of the name line */
-  .toggle{
-    flex:none;width:36px;height:36px;padding:0;
-    border:1px solid var(--paper-line);border-radius:50%;background:#fff;color:var(--ink-soft);cursor:pointer;
-    display:inline-flex;align-items:center;justify-content:center;
-    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  select{
+    -webkit-appearance:none;-moz-appearance:none;appearance:none;
+    padding-right:46px;text-overflow:ellipsis;cursor:pointer;
+    background-color:#fff;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6558' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 16px center;background-size:16px 16px;
   }
-  .caret{
-    width:9px;height:9px;flex:none;
-    border-right:2px solid currentColor;border-bottom:2px solid currentColor;
-    transform:rotate(45deg) translate(-1px,-1px);transition:transform .15s ease;
+  textarea{min-height:80px;resize:vertical;line-height:1.5;}
+  input::placeholder,textarea::placeholder{color:var(--ink-faint);}
+  input:focus,select:focus,textarea:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,97,21,.16);
   }
-  .toggle[aria-expanded="true"]{background:rgba(255,97,21,.12);border-color:rgba(255,97,21,.45);color:var(--accent-deep);}
-  .toggle[aria-expanded="true"] .caret{transform:rotate(225deg) translate(-1px,-1px);}
-  .card.open{border-color:rgba(255,97,21,.5);box-shadow:0 6px 22px rgba(35,35,35,.08);}
-  #results{overflow-anchor:none;}   /* we keep the scroll position steady ourselves when a card closes */
+  .field.invalid input,.field.invalid select,.field.invalid textarea{border-color:var(--unpaid-red);}
+  .hint{font-size:12.5px;color:var(--ink-faint);margin-top:6px;line-height:1.4;}
+  .err{font-size:13px;color:var(--unpaid-red);margin-top:6px;line-height:1.4;}
+  .err:empty{display:none;}
+  input[lang="te"],textarea[lang="te"]{font-family:'Noto Sans Telugu','Inter',sans-serif;}
 
-  /* the dropdown with all the details */
-  .details{margin-top:16px;padding-top:16px;border-top:1px solid var(--paper-line);animation:reveal .18s ease;}
-  .details > :first-child{margin-top:0;}
-  @keyframes reveal{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
-
-  /* all package details together in one box */
+  /* the chosen package, shown read-only (same look as on the customer card) */
   .pack{
     margin-top:16px;padding:12px 14px 14px;
-    background:rgba(255,97,21,.05);
-    border:1px solid rgba(255,97,21,.25);border-radius:12px;
+    background:rgba(255,97,21,.05);border:1px solid rgba(255,97,21,.25);border-radius:12px;
   }
   .pack-title{font-size:12.5px;font-weight:600;line-height:1.4;color:var(--accent-deep);margin-bottom:10px;}
-  .pack .total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,97,21,.25);font-size:15px;}
-  .pack .total span{font-weight:700;}
-  .pack .total b{font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;}
-  .tail{margin-top:16px;}
-  .tail .field{grid-column:1 / -1;}
+  .total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,97,21,.25);font-size:15px;}
+  .total span{font-weight:700;}
+  .total b{font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;}
+  .group[hidden],.actions[hidden]{display:none;}
+  .group.reveal{animation:stepin .22s ease;}
+  @keyframes stepin{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+  .pack-empty{font-size:14px;color:var(--ink-soft);line-height:1.5;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+  .pl{font-size:12.5px;color:var(--ink-soft);margin-bottom:2px;line-height:1.5;}
+  .pv{font-size:15px;line-height:1.5;overflow-wrap:anywhere;}
+  .pv.mono{font-family:'IBM Plex Mono',monospace;font-size:14px;}
 
-  .none{
-    padding:36px 10px;text-align:center;color:var(--ink-soft);font-size:15px;line-height:1.5;
+  .actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:8px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:0 26px;border-radius:999px;
+    font:inherit;font-size:16px;font-weight:600;line-height:1;cursor:pointer;text-decoration:none;
+    border:1.5px solid transparent;
   }
-  .more-wrap{text-align:center;margin-top:8px;}
-  .more-btn{
-    font-family:'IBM Plex Mono',monospace;font-size:12.5px;
-    background:transparent;border:1.5px solid var(--ink);color:var(--ink);
-    padding:9px 18px;border-radius:999px;cursor:pointer;
-  }
+  .btn.primary{background:var(--accent-deep);color:#fff;}
+  .btn.secondary{background:#fff;color:var(--ink);border-color:var(--ink);}
+  .btn:disabled{opacity:.6;cursor:default;}
+  .msg{margin-top:14px;font-size:14.5px;line-height:1.5;}
+  .msg.error{color:var(--unpaid-red);}
+  .msg.info{color:var(--ink-soft);}
 
-  .setup-banner{
-    background:#FBF6E9;border:1px solid #E8DDB0;border-radius:10px;
-    padding:14px 16px;margin:0 0 22px;font-size:13.5px;line-height:1.6;
+  /* ---------- saved ---------- */
+  .done{background:var(--card);border:1px solid rgba(255,97,21,.4);border-radius:14px;padding:22px 20px 24px;}
+  .tick{
+    width:44px;height:44px;border-radius:50%;background:rgba(255,97,21,.14);color:var(--accent-deep);
+    display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;
   }
-  .setup-banner code{background:#F0E9D2;padding:2px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .tick svg{width:24px;height:24px;}
+  .done h2{font-family:'Fraunces',serif;font-weight:600;font-size:24px;line-height:1.3;color:var(--accent);margin:0 0 4px;}
+  .done p{margin:0 0 16px;color:var(--ink-soft);font-size:15px;line-height:1.5;}
+  .summary{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;margin:0 0 20px;}
+  .summary .wide{grid-column:1 / -1;}
 
   :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
-  .searchbox input:focus-visible{outline:none;}
+  input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;}
 
-  /* =====================================================================
-     RESPONSIVE
-       phone    up to 560 px   bottom-sheet menu, 2-column card details
-       tablet   561–1024 px    larger type and spacing, wider column
-       desktop  1025 px and up the base styles above
-     Extra rules: 3-column card details from 640 px, bigger touch targets on
-     touch screens, short landscape screens, notches (safe-area), tiny phones.
-     ===================================================================== */
-
-  /* hover effects only where a real mouse exists (on touch screens hover can stay "stuck" after a tap) */
-  @media (hover:hover){
-    button.refresh:hover{background:var(--ink);color:var(--bg);}
-    .langbtn:hover{background:rgba(255,97,21,.22);}
-    .profile:hover{background:rgba(255,97,21,.22);}
-    .plus:hover{background:var(--paper-line);}
-    .clear:hover{background:var(--paper-line);}
-    .opt:hover{background:var(--paper);}
-    .chip button:hover{background:var(--paper-line);}
-    .value a:hover{border-bottom-color:var(--accent);}
-    .more-btn:hover{background:var(--ink);color:var(--bg);}
-    .idbtn:hover .idtext{text-decoration-thickness:2.5px;}
-    .toggle:hover{background:var(--paper);}
-  }
-
-  /* card details: 3 columns once the card is wide enough */
   @media (min-width:640px){
+    .fields{grid-template-columns:1fr 1fr;}
     .grid{grid-template-columns:repeat(3,1fr);}
+    .summary{grid-template-columns:repeat(3,1fr);}
   }
-
-  /* tablet */
   @media (min-width:561px) and (max-width:1024px){
-    .topbar{padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:18px;
-            padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));}
-    .brand{font-size:20px;}
+    .topbar{padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));}
     main{max-width:780px;}
-    .hero h1{font-size:40px;max-height:68px;}
-    .searchbox{height:62px;padding-left:26px;}
-    .searchbox input{font-size:18px;}
-    .panel{width:min(380px,100%);}
-    .opt{font-size:16px;padding:11px 14px;}
-    .chip{font-size:14.5px;}
-    .card{padding:16px 24px 16px;}
-    .card-name{font-size:22px;}
-    .value{font-size:16px;}
-    .label{font-size:13px;}
+    .group{padding:22px 24px 24px;}
   }
-
-  /* phone */
   @media (max-width:560px){
-    .right{gap:8px;}
-    .langbtn{height:32px;padding:0 11px 0 8px;font-size:13px;}
+    h1{font-size:28px;}
     main{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));}
-    .hero h1{font-size:30px;}
-    .searchbox{height:54px;}
-    .searchbox input{font-size:16px;}   /* 16px stops iPhone auto-zoom */
-    .card{padding:12px 14px 12px;}
-    .grid{gap:12px 16px;}
-
-    /* the area menu becomes a sheet that slides up from the bottom */
-    .scrim{
-      display:block;position:fixed;inset:0;z-index:25;background:rgba(35,35,35,.38);
-      opacity:0;pointer-events:none;transition:opacity .2s ease;
-    }
-    body.menu-open .scrim{opacity:1;pointer-events:auto;}
-    body.menu-open{overflow:hidden;}
-    .panel{
-      position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;z-index:30;
-      max-height:72vh;max-height:72dvh;
-      border-radius:20px 20px 0 0;border-width:1px 0 0;
-      box-shadow:0 -12px 36px rgba(35,35,35,.22);
-      padding:8px max(8px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));
-      animation:sheet-up .22s ease;
-    }
-    .opt{font-size:16px;padding:12px 14px;}
-    .panel-title{font-size:13px;padding:10px 14px 6px;}
+    .topbar{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));}
+    .group{padding:16px 14px 18px;}
+    .actions .btn{flex:1 1 100%;}
+    .status{font-size:11px;}
   }
-  @keyframes sheet-up{from{transform:translateY(28px);opacity:0;}to{transform:none;opacity:1;}}
-
-  /* small phones: put the status on its own line under brand / language / reload */
-  @media (max-width:440px){
-    .topbar{padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:10px;
-            padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-            row-gap:8px;}
-    .right{display:contents;}
-    .brand{margin-right:auto;}
-    .status{order:5;flex:1 0 100%;text-align:left;font-size:11.5px;}
-  }
-
-  /* very small phones (320–360 px) */
   @media (max-width:360px){
-    .hero h1{font-size:26px;}
-    .card{padding:10px 12px 12px;}
-    .pack{padding:10px 10px 12px;}
-    .card-name{font-size:18px;}
-    .grid{gap:10px 12px;}
-    .searchbox{padding-left:16px;}
+    h1{font-size:25px;}
+    .group{padding:14px 12px 16px;}
   }
-
-  /* short landscape screens (phones turned sideways): save vertical space */
-  @media (max-height:500px) and (orientation:landscape){
-    .hero{padding-top:18px;}
-    .hero h1{font-size:26px;margin-bottom:14px;max-height:40px;}
-    .searchbox{height:50px;}
-    .topbar{padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:8px;}
-    .panel{max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);}
-  }
-  @media (max-width:560px) and (max-height:500px) and (orientation:landscape){
-    .panel{max-height:80vh;max-height:80dvh;}
-  }
-
-  /* touch screens: comfortable 44 px tap targets */
-  @media (pointer:coarse){
-    .langbtn{height:44px;padding:0 15px 0 12px;font-size:14px;}
-    .profile{width:44px;height:44px;}
-    button.refresh{width:44px;height:44px;border-radius:10px;}
-    .plus{width:44px;height:44px;}
-    .clear{width:40px;height:40px;}
-    .opt{min-height:46px;}
-    .chip{padding:5px 6px 5px 14px;}
-    .chip button{width:30px;height:30px;font-size:17px;}
-    .more-btn{padding:13px 24px;font-size:13.5px;}
-    .idbtn{min-height:44px;}
-    .toggle{width:44px;height:44px;}
-    .searchbox{min-height:56px;}
-  }
-
-  @media (prefers-reduced-motion:reduce){
-    *{transition:none !important;animation:none !important;}
-  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
 </style>
 </head>
 <body>
 
-<div class="scrim" id="scrim"></div>
-
 <div class="topbar">
-  <div class="brand">SKJCN</div>
-  <div class="right">
-    <button class="langbtn" id="langBtn" type="button">
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
-      <span id="langText">English</span>
-    </button>
-    <div class="status" id="status"><span class="dot"></span><span id="statusText">connecting…</span></div>
-    <button class="refresh" id="refreshBtn" aria-label="Reload customer list" title="Reload customer list">↻</button>
-    <a class="profile" id="profileLink" href="add-customer.html" aria-label="Add a customer" title="Add a customer">
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm0 2.2c-3 0-9 1.5-9 4.5V21h18v-2.3c0-3-6-4.5-9-4.5z"/></svg>
-    </a>
-  </div>
+  <a class="back" id="backLink" href="customer-search.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    Search customers
+  </a>
+  <div class="status" id="status"><span class="dot"></span><span id="statusText">connecting…</span></div>
 </div>
 
-<main id="app">
-  <div class="setup-banner" id="setupBanner" hidden>
-    Demo mode: showing 8 sample customers because no sheet is connected yet.
-    Paste your Apps Script Web app URL into <code>SCRIPT_URL</code> near the top of the
-    <code>&lt;script&gt;</code> section of this file, then reload.
+<main>
+  <div class="banner" id="demoBanner" hidden>
+    Demo mode: no sheet is connected, so nothing you enter here is saved. Open this page from the
+    profile icon on the search page, or paste your Apps Script Web app URL into <code>SCRIPT_URL</code>
+    near the top of the <code>&lt;script&gt;</code> section of this file.
   </div>
 
-  <section class="hero">
-    <h1>Find a customer</h1>
-    <div class="searchwrap">
-      <div class="searchbox" id="searchbox">
-        <input id="q" type="text" placeholder="Search by name or alternate name" aria-label="Search customers by name or alternate name"
-               autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
-               enterkeyhint="search" inputmode="search" autofocus>
-        <button class="clear" id="clearBtn" type="button" aria-label="Clear search">×</button>
-        <button class="plus" id="plusBtn" type="button" aria-haspopup="true" aria-expanded="false"
-                aria-controls="panel" aria-label="Filter by area" title="Filter by area">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
+  <h1>Add a customer</h1>
+  <p class="lead">Fill in the details below. The customer is saved straight into your Google Sheet.</p>
+
+  <form id="form" novalidate>
+    <div id="groups"></div>
+
+    <div class="group" id="passGroup" hidden>
+      <div class="field">
+        <label for="passcode">Passcode <span class="req" aria-hidden="true">*</span></label>
+        <input id="passcode" type="password" autocomplete="off" placeholder="The passcode set in the sheet's script">
+        <div class="err" id="e_passcode"></div>
       </div>
-      <div class="panel" id="panel" hidden></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="saveBtn" type="submit" disabled>Save customer</button>
+    </div>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  </form>
+
+  <section class="done" id="done" hidden aria-live="polite">
+    <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2 id="doneTitle">Customer saved</h2>
+    <p id="doneNote"></p>
+    <div class="summary" id="summary"></div>
+    <div class="actions">
+      <button class="btn primary" id="againBtn" type="button">Add another customer</button>
+      <a class="btn secondary" id="searchLink" href="index.html">Search customers</a>
     </div>
   </section>
-
-  <div class="chips" id="chips" hidden></div>
-  <div class="meta" id="meta" aria-live="polite"></div>
-  <div id="results"></div>
-  <div class="more-wrap"><button class="more-btn" id="moreBtn" type="button" hidden></button></div>
 </main>
 
 <script>
   // ============================================================
-  // 1) Paste your deployed Apps Script Web app URL below.
-  //    Leave blank to try the page with built-in demo data.
+  // The Apps Script Web app URL. Normally you do NOT need to paste it here: the profile icon on the
+  // search page opens this page with the same URL already attached. Paste it only if you open this page directly.
   // ============================================================
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwKrfD2sSRe16lzNsRz0Ry3oXiM_gGqGYjHROdwRyMIkJodO-2ZRB3Q4yAI_0SLGqO0/exec";   // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
+  const SCRIPT_URL  = "https://script.google.com/macros/s/AKfycbwKrfD2sSRe16lzNsRz0Ry3oXiM_gGqGYjHROdwRyMIkJodO-2ZRB3Q4yAI_0SLGqO0/exec";
+  const SEARCH_PAGE = "customer-search.html";
 
-  const NAME_COL     = "cust_name";   // main name column (searched, and shown as the card heading)
-  const AREA_COL     = "area";        // the filter behind the + button
-  const ALT_COL      = "alt_name";    // optional alternate name: searched together with cust_name
-  const ID_COL       = "cust_id2";    // the customer ID that is shown (styled like a link, but it is not one)
-  const SORT_COL     = "cust_id1";    // the list is arranged by this column (it is never shown)
-  const DEFAULT_LANG = "te";          // page opens in Telugu ("en" for English)
-  const PACK_KEY     = "pack_id";    // links a customer to a package in the "pack" tab
-  const VILL_NAME_COL = "villages";  // "Villages" tab: the village's English name (= the customer's area) …
-  const VILL_TE_COL   = "vill_te";   // … and its Telugu name
-  const ADD_PAGE     = "add-customer.html";   // the page behind the profile icon
+  // Sheet columns that must be filled in before a customer can be saved
+  const REQUIRED = ["cust_name", "cust_id2", "phone", "area", "pack_id"];
 
-  // English column → its Telugu column. In Telugu mode the Telugu value is shown
-  // (English is used if the Telugu cell is empty). The Telugu columns are never
-  // shown as separate fields.
-  const TRANSLATED = { cust_name:"cust_name_te", area:"area_te", alt_name:"alt_name_te", notes:"notes_te" };
-  const HIDDEN_COLS = ["connection_date"];   // columns that are never shown (SORT_COL is hidden automatically)
+  // How each column is asked for. Columns not listed here simply get a plain text box (label made from the header).
+  const FIELD = {
+    cust_id1:     { label:"Customer number",  type:"number", min:"1", hint:"Numbered automatically when you save. Type your own number only if you need a specific one." },
+    cust_id2:     { label:"Customer ID",      ph:"e.g. SK1187", hint:"The ID shown on the customer's card. It must be new." },
+    cust_name:    { label:"Name",             ph:"e.g. Ravi Kumar", caps:"words" },
+    cust_name_te: { label:"Name in Telugu",   te:true, ph:"ఉదా: రవి కుమార్" },
+    alt_name:     { label:"Alternate name",   hint:"A nickname or shop name (optional)." },
+    alt_name_te:  { label:"Alternate name in Telugu", te:true },
+    phone:        { label:"Phone",            type:"tel", ph:"10-digit number" },
+    area:         { label:"Area",             list:true, ph:"Choose an area or type a new one", caps:"words" },
+    area_te:      { label:"Area in Telugu",   te:true, hint:"Filled in automatically from the Villages tab." },
+    pack_id:      { label:"Package",          select:true },
+    notes:        { label:"Notes",            textarea:true, wide:true },
+    notes_te:     { label:"Notes in Telugu",  te:true, textarea:true, wide:true }
+  };
+  const PACK_LABELS = { pack_speed:"Speed", pack_type:"Type", pack_price:"Price", pack_price_month:"Price / month", months:"Months", discount:"Discount (₹)" };
 
-  // Package details: these columns are grouped together in one box on every card
-  // (any column whose name starts with "pack_" is added to the box too).
-  const PACK_COLS  = ["pack_id","pack_speed","pack_type","pack_price","pack_price_month","months","discount"];
-  const PACK_TITLE = "Package details";
-  const TAIL_COLS  = ["notes"];       // shown full width at the bottom of the card, under the package box
-
-  const PAGE_SIZE  = 30;            // customers drawn at a time (more load by themselves as you scroll)
-  const AUTO_CLOSE_MS = 5000;       // an opened details dropdown closes by itself after this long without a response (5 s)
-  const REFRESH_MS = 5 * 60 * 1000; // quietly re-check the sheet every 5 minutes
-
-  // Demo data (used when SCRIPT_URL is empty). Rows are deliberately NOT in cust_id1 order.
-  // "packages" is the "pack" tab and "villages" the "Villages" tab: typed once there, customers only carry the pack_id / village name.
+  // Demo data (used when no web app URL is available)
   const DEMO = {
     headers: ["cust_id1","cust_id2","cust_name","cust_name_te","phone","area","area_te","pack_id","notes","notes_te"],
+    rows: [
+      ["1001","SK1187","Ravi Kumar","రవి కుమార్","9876543210","Ramapuram","రామాపురం","P07","",""],
+      ["1002","SK0921","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapalli","కొత్తపల్లి","P08","",""],
+      ["1003","SK2043","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Gangavaram","గంగవరం","P01","",""]
+    ],
     packages: {
       headers: ["pack_id","pack_speed","pack_type","pack_price_month","months","discount"],
-      rows: [
-        ["P01","30 Mbps","Basic","499","1","0"],        ["P02","50 Mbps","Standard","699","1","0"],
-        ["P03","100 Mbps","Fibre","999","1","0"],       ["P04","200 Mbps","Unlimited","1499","1","0"],
-        ["P05","50 Mbps","Standard","699","6","210"],     ["P06","100 Mbps","Fibre","999","6","599"],
-        ["P07","100 Mbps","Fibre","999","12","1798"],     ["P08","200 Mbps","Unlimited","1499","12","2698"]
-      ]
+      rows: [["P01","30 Mbps","Basic","499","1","0"],["P02","50 Mbps","Standard","699","1","0"],["P03","100 Mbps","Fibre","999","1","0"],["P04","200 Mbps","Unlimited","1499","1","0"],
+             ["P05","50 Mbps","Standard","699","6","210"],["P06","100 Mbps","Fibre","999","6","599"],["P07","100 Mbps","Fibre","999","12","1798"],["P08","200 Mbps","Unlimited","1499","12","2698"]]
     },
     villages: {
       headers: ["villages","vill_te","vill_id"],
       rows: [["Ramapuram","రామాపురం","V01"],["Kothapalli","కొత్తపల్లి","V02"],["Venkatapuram","వెంకటాపురం","V03"],["Lakshmipuram","లక్ష్మీపురం","V04"],["Gangavaram","గంగవరం","V05"]]
     },
-    config: { needsPasscode: false },
-    updated: 0,
-    rows: [
-      ["1003","SK2043","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Ramapuram","","P01","",""],
-      ["1001","SK1187","Ravi Kumar","రవి కుమార్","9876543210","Ramapuram","","P07","Prefers evening visits","సాయంత్రం రావడం ఇష్టం"],
-      ["1007","SK3310","Kiran Kumar","కిరణ్ కుమార్","9811122233","Gangavaram","గంగవరం","P05","",""],
-      ["1002","SK0921","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapalli","కొత్తపల్లి","P08","Static IP","స్టాటిక్ ఐపీ"],
-      ["1005","SK2760","Suresh Babu","సురేష్ బాబు","9345612780","Kothapalli","","P02","",""],
-      ["1004","SK1544","Venkata Ramana Rao","వెంకట రమణ రావు","9000011122","Gangavaram","గంగవరం","P08","Router replaced","రూటర్ మార్చారు"],
-      ["1006","SK0408","Priya Chowdary","ప్రియ చౌదరి","9700012345","Ramapuram","రామాపురం","P06","",""],
-      ["1008","SK2891","Anitha Sharma","అనిత శర్మ","9922233344","Kothapalli","కొత్తపల్లి","P03","",""]
-    ]
+    config: { needsPasscode: false }
   };
 
-  // Field labels (headings). They always stay in English; only the VALUES under them change language.
-  const LABELS = {
-    cust_id2:"Customer ID", cust_name:"Name", phone:"Phone", area:"Area",
-    pack_id:"Pack ID", pack_speed:"Speed", pack_type:"Type", pack_price:"Price", pack_price_month:"Price / month",
-    months:"Months", discount:"Discount (₹)", notes:"Notes", alt_name:"Alternate name"
-  };
-
-  // Words used in the + menu and the filter chip (always English; only the area NAMES switch language)
-  const UI = { area:"Area", all:"All areas", none:"No areas found in the sheet." };
-
-  // =====================================================================
-  //  SEARCH CORE — the part that makes it fast. No DOM in here.
-  //  * The whole list is already in memory, so nothing is sent to the server
-  //    while you type.
-  //  * Each customer is indexed once with ALL their names (name, Telugu name,
-  //    alternate name, Telugu alternate name), so a search in English OR Telugu,
-  //    by name OR alternate name, finds the same customer.
-  //  * Rows are arranged once, by cust_id1 ("natural" order: 2 comes before 10).
-  //    Every list the page shows is in that order, so nothing is sorted while typing.
-  //  * Each keystroke is one pass of String.indexOf over plain strings.
-  //  * Picking an area builds a short list ("base") once; every search after
-  //    that only looks inside that list.
-  //  * While you keep typing the same name ("ra" → "rav" → "ravi"), only the
-  //    previous matches are re-checked, so every extra letter is cheaper.
-  // =====================================================================
-  // <search-core>
-  let hay = [];             // normalized names of each customer joined by spaces, in list order
-  let base = null;          // null = all customers, else the row positions allowed by the area filter
-  let lastQ = '', lastCand = null;
-
-  const ASCII = /^[\x00-\x7f]*$/;
-  function norm(s){
-    s = String(s);
-    if (ASCII.test(s)) return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();   // fast path: plain English
-    return s.normalize('NFC').toLowerCase()
-      .replace(/[\u200c\u200d]/g, '')                    // invisible joiners in Telugu typing
-      .replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ').trim();
-  }
-
-  // Sort key that puts ids in natural order with plain "<" comparison:
-  // digits are zero-padded, so "2" < "10" and "C9" < "C10". Customers without an id go last.
-  function idKey(v){
-    const s = String(v == null ? '' : v).trim().toLowerCase();
-    if (!s) return '\uffff';
-    return s.replace(/\d+/g, m => m.length >= 12 ? m : m.padStart(12, '0'));
-  }
-
-  // Arranges the rows and builds the lookup array. Returns the arranged rows.
-  //   o.name  = main name column      o.te    = its Telugu column (-1 if none)
-  //   o.extra = other columns to search too, e.g. [altIdx, altTeIdx] (-1 entries are ignored)
-  //   o.sort  = column to arrange by (cust_id1). If -1, rows are arranged A→Z by name in o.lang
-  function buildIndex(rows, o){
-    const cols = [o.name, o.te].concat(o.extra || []);
-    const recs = rows.map(r => {
-      const parts = [];
-      for (let j = 0; j < cols.length; j++){
-        if (cols[j] < 0) continue;
-        const p = norm(r[cols[j]] || '');
-        if (p) parts.push(p);
-      }
-      let k;
-      if (o.sort >= 0) k = idKey(r[o.sort]);
-      else {
-        const te = o.te >= 0 ? norm(r[o.te] || '') : '';
-        k = (o.lang === 'te' && te) ? te : norm(r[o.name] || '');
-      }
-      return { r, h: parts.join(' '), k };
-    });
-    recs.sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);   // stable: equal ids keep sheet order
-    hay = recs.map(x => x.h);
-    base = null; lastQ = ''; lastCand = null;
-    return recs.map(x => x.r);
-  }
-
-  // Restricts every following search to these row positions (or null for everyone).
-  function setBase(b){ base = b; lastQ = ''; lastCand = null; }
-
-  // Returns { q, toks, idx } where idx = row positions in list order.
-  // With an empty query it returns the whole filtered list (everyone in the chosen area).
-  function search(raw){
-    const q = norm(raw);
-    if (!q){ lastQ = ''; lastCand = null; return { q:'', toks:[], idx: base || [] }; }
-    const toks = q.split(' ');
-    const src = (lastCand && lastQ && q.startsWith(lastQ)) ? lastCand : base;
-    const n = src ? src.length : hay.length;
-    const out = [];
-    for (let i = 0; i < n; i++){
-      const idx = src ? src[i] : i;
-      const h = hay[idx];
-      let ok = true;
-      for (let t = 0; t < toks.length; t++){
-        if (h.indexOf(toks[t]) === -1){ ok = false; break; }
-      }
-      if (ok) out.push(idx);
-    }
-    lastQ = q; lastCand = out;
-    return { q, toks, idx: out };
-  }
-  // </search-core>
-
-  // ---------------------------------------------------------------------
-  //  Page code
-  // ---------------------------------------------------------------------
+  // ---------------------------------------------------------------
   const $ = id => document.getElementById(id);
-  const app = $('app'), input = $('q'), clearBtn = $('clearBtn'), metaEl = $('meta');
-  const resultsEl = $('results'), moreBtn = $('moreBtn');
-  const statusEl = $('status'), statusText = $('statusText'), refreshBtn = $('refreshBtn');
-  const plusBtn = $('plusBtn'), panel = $('panel'), chipsEl = $('chips');
-  const langBtn = $('langBtn'), langText = $('langText');
-
-  let lang = DEFAULT_LANG;
-  let headers = [], headersLow = [], rawRows = [], data = [];
-  let nameIdx = -1, areaIdx = -1, altIdx = -1, idIdx = -1, sortIdx = -1;
-  let colKind = [], teIdxOf = [], hiddenCol = [];
-  let mainIdx = [], packIdx = [], tailIdx = [];      // which columns go where on a card
-  let ready = false, loadedStamp = null;
-  let results = [], shown = 0, curRe = null;
-
-  // area filter state
-  let rowArea = [];                    // lower-cased ENGLISH area of every row (the stable key)
-  let areaList = [];                   // [{key,en,te}] A→Z in the current language
-  let selArea = '';                    // applied filter (key, '' = none)
-  let panelOpen = false;
+  const form = $('form'), groupsEl = $('groups'), saveBtn = $('saveBtn'), msgEl = $('msg'), doneEl = $('done');
+  const url = new URLSearchParams(location.search).get('u') || SCRIPT_URL;
 
   const ESC = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
-  const esc = s => String(s).replace(/[&<>"']/g, c => ESC[c]);
-  const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const tidy = v => String(v == null ? '' : v).trim().replace(/\s+/g, ' ');
-  const disp = x => (lang === 'te' && x.te) ? x.te : x.en;     // label of an area
-  const T = () => UI;
-
-  function fmtPrice(v){
-    const n = Number(v);
-    return isNaN(n) ? esc(v) : '₹' + n.toLocaleString('en-IN');
-  }
-  function labelFor(i){
-    const k = headersLow[i];
-    if (LABELS[k]) return LABELS[k];
-    const s = headers[i].replace(/_/g, ' ').trim();
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-  // the value of column i for row r, in the current language
-  function show(r, i){
-    const t = teIdxOf[i];
-    if (lang === 'te' && t >= 0 && r[t]) return String(r[t]);
-    return r[i] == null ? '' : String(r[i]);
-  }
-
-  function setStatus(mode, text){
-    statusEl.className = 'status ' + mode;
-    statusText.textContent = text;
-  }
-  const count = () => data.length.toLocaleString('en-IN');
-  const clock = () => new Date().toLocaleTimeString();
-
-  // Joins the "pack" tab onto the customers. For every customer, the details of the package with the same
-  // pack_id (speed, type, price, months, discount …) are added as extra columns, so the cards show them
-  // exactly as if they were typed in the Customers tab. A value typed in the Customers tab itself wins.
-  function joinPackages(d){
-    const ch = (d.headers || []).map(x => String(x).trim());
-    const pk = d.packages;
-    if (!pk || !pk.headers || !pk.rows) return { headers: ch, rows: d.rows || [] };       // no "pack" tab: use the sheet as it is
-    const ph = pk.headers.map(x => String(x).trim());
-    const cl = ch.map(x => x.toLowerCase()), pl = ph.map(x => x.toLowerCase());
-    const cId = cl.indexOf(PACK_KEY), pId = pl.indexOf(PACK_KEY);
-    if (cId < 0 || pId < 0) return { headers: ch, rows: d.rows || [] };
-    const idKey = v => String(v == null ? '' : v).trim().toLowerCase();
-    const byId = new Map();
-    pk.rows.forEach(r => { const k = idKey(r[pId]); if (k && !byId.has(k)) byId.set(k, r); });
-    const headers = ch.slice(), map = [];                        // map: [column in the pack tab, column in the joined rows]
-    pl.forEach((k, j) => {
-      if (j === pId || !ph[j]) return;
-      let c = cl.indexOf(k);
-      if (c < 0){ headers.push(ph[j]); c = headers.length - 1; }
-      map.push([j, c]);
-    });
-    const rows = (d.rows || []).map(r => {
-      const out = r.slice();
-      while (out.length < headers.length) out.push('');
-      const pr = byId.get(idKey(r[cId]));
-      if (pr) map.forEach(([j, c]) => { if (out[c] === '' || out[c] == null) out[c] = pr[j] == null ? '' : pr[j]; });
-      return out;
-    });
-    return { headers, rows };
-  }
-
-  // Fills an empty "area_te" cell from the Villages tab (villages → vill_te), so the Telugu village name shows
-  // and the area filter lists it in Telugu even when it was not typed for that customer.
-  function addVillageNames(j, d){
-    const vl = d.villages;
-    if (!vl || !vl.headers || !vl.rows) return j;
-    const vh = vl.headers.map(x => String(x).trim().toLowerCase());
-    const vi = vh.indexOf(VILL_NAME_COL), vt = vh.indexOf(VILL_TE_COL);
-    const hl = j.headers.map(x => x.toLowerCase());
-    const ia = hl.indexOf(AREA_COL);
-    if (vi < 0 || vt < 0 || ia < 0) return j;
-    const key = v => String(v == null ? '' : v).trim().toLowerCase().replace(/\s+/g, ' ');
-    const te = new Map();
-    vl.rows.forEach(r => { const k = key(r[vi]); const t = String(r[vt] == null ? '' : r[vt]).trim(); if (k && t && !te.has(k)) te.set(k, t); });
-    const headers = j.headers.slice();
-    let it = hl.indexOf(AREA_COL + '_te');
-    if (it < 0){ headers.push(AREA_COL + '_te'); it = headers.length - 1; }
-    const rows = j.rows.map(r => {
-      const out = r.slice();
-      while (out.length < headers.length) out.push('');
-      if (!out[it]){ const t = te.get(key(out[ia])); if (t) out[it] = t; }
-      return out;
-    });
-    return { headers, rows };
-  }
-
-  // Loads a { headers, rows, packages, villages } payload.
-  function setData(d){
-    const joined = addVillageNames(joinPackages(d), d);
-    const h = joined.headers;
-    const low = h.map(x => x.toLowerCase());
-    const ni = low.indexOf(NAME_COL);
-    if (ni < 0){
-      setStatus('error', 'column "' + NAME_COL + '" not found in the sheet');
-      return false;
-    }
-    headers = h; headersLow = low; nameIdx = ni;
-    areaIdx = low.indexOf(AREA_COL);
-    altIdx  = low.indexOf(ALT_COL);
-    idIdx   = low.indexOf(ID_COL);
-    sortIdx = low.indexOf(SORT_COL);
-    teIdxOf = low.map(k => TRANSLATED[k] ? low.indexOf(TRANSLATED[k]) : -1);
-    const teCols = Object.values(TRANSLATED);
-    hiddenCol = low.map(k => HIDDEN_COLS.includes(k) || teCols.includes(k) || (k === SORT_COL && k !== ID_COL));
-    colKind = low.map(k => {
-      if (k.includes('price') || k === 'discount') return 'price';
-      if (k.includes('phone')) return 'phone';
-      if (k.endsWith('_id') || k.includes('date')) return 'mono';
-      return 'text';
-    });
-
-    // where each column goes on the card: main fields, the package box, or the bottom (notes)
-    const isPack = k => PACK_COLS.includes(k) || k.startsWith('pack_');
-    mainIdx = []; packIdx = []; tailIdx = [];
-    low.forEach((k, i) => {
-      if (i === nameIdx || hiddenCol[i]) return;
-      (isPack(k) ? packIdx : TAIL_COLS.includes(k) ? tailIdx : mainIdx).push(i);
-    });
-
-    // the search bar only mentions "alternate name" when the sheet has that column
-    const ph = altIdx >= 0 ? 'Search by name or alternate name' : 'Search by customer name';
-    input.placeholder = ph;
-    input.setAttribute('aria-label', ph);
-
-    rawRows = joined.rows;
-    ready = true;
-    plusBtn.hidden = areaIdx < 0;                       // no area column → no + button
-    rebuild();
-    return true;
-  }
-
-  // Arranges + indexes the rows (by cust_id1), rebuilds the area list.
-  // Runs when the sheet loads. (A language switch only needs relabel(), unless the
-  // sheet has no cust_id1 column and the list is arranged by name instead.)
-  function rebuild(){
-    data = buildIndex(rawRows, {
-      name: nameIdx, te: teIdxOf[nameIdx],
-      extra: [altIdx, altIdx >= 0 ? teIdxOf[altIdx] : -1],   // search the alternate name too
-      sort: sortIdx, lang
-    });
-    relabel();
-  }
-  function relabel(){
-    buildAreas();
-    renderChips();
-    if (panelOpen) renderPanel();
-  }
-
-  // ---------------- area filter ----------------
-  // The filter works on the ENGLISH area text (a stable key), so the same choice
-  // stays selected when the language is switched. Only the label changes.
-  function buildAreas(){
-    const am = new Map();   // area key → { en, te }
-    rowArea = new Array(data.length);
-    const aTe = areaIdx >= 0 ? teIdxOf[areaIdx] : -1;
-    for (let i = 0; i < data.length; i++){
-      const r = data[i];
-      const a  = areaIdx >= 0 ? tidy(r[areaIdx]) : '';
-      const at = aTe >= 0 ? tidy(r[aTe]) : '';
-      const ak = a.toLowerCase();
-      rowArea[i] = ak;
-      if (!ak) continue;
-      const e = am.get(ak);
-      if (!e) am.set(ak, { en: a, te: at });
-      else if (!e.te && at) e.te = at;
-    }
-    const loc = lang === 'te' ? 'te' : undefined;
-    areaList = [...am].map(([key, e]) => ({ key, en:e.en, te:e.te }))
-      .sort((x, y) => disp(x).localeCompare(disp(y), loc, { numeric:true, sensitivity:'base' }));
-
-    if (selArea && !am.has(selArea)) selArea = '';      // after a reload keep the choice only if it still exists
-    applyFilter();
-  }
-
-  function applyFilter(){
-    if (!selArea){ setBase(null); return; }
-    const b = [];
-    for (let i = 0; i < rowArea.length; i++) if (rowArea[i] === selArea) b.push(i);
-    setBase(b);
-  }
-
-  const areaLabel = key => { const a = areaList.find(x => x.key === key); return a ? disp(a) : key; };
-
-  function afterFilterChange(){
-    applyFilter();
-    renderChips();
-    run();
-  }
-
-  function renderChips(){
-    plusBtn.classList.toggle('on', !!selArea);
-    if (!selArea){ chipsEl.hidden = true; chipsEl.innerHTML = ''; return; }
-    chipsEl.innerHTML = '<span class="chip"><span class="k">' + esc(T().area) + ':</span> ' + esc(areaLabel(selArea)) +
-      '<button type="button" data-rm="area" aria-label="Remove filter">×</button></span>';
-    chipsEl.hidden = false;
-  }
-
-  function renderPanel(){
-    let h = '<div class="panel-title">' + esc(T().area) + '</div>';
-    h += '<button class="opt' + (!selArea ? ' on' : '') + '" type="button" data-area="">' + esc(T().all) + '</button>';
-    areaList.forEach((a, i) => {
-      h += '<button class="opt' + (a.key === selArea ? ' on' : '') + '" type="button" data-area="' + i + '">' + esc(disp(a)) + '</button>';
-    });
-    if (!areaList.length) h += '<div class="panel-title">' + esc(T().none) + '</div>';
-    panel.innerHTML = h;
-  }
-
-  function focusPanel(){
-    const el = panel.querySelector('.opt.on') || panel.querySelector('.opt');
-    if (el) el.focus({ preventScroll:false });
-  }
-
-  // Dropdown (tablet / desktop): never taller than the space left below the search bar.
-  // On phones the menu is a bottom sheet sized by CSS, so nothing to do there.
-  function fitPanel(){
-    if (!panelOpen) return;
-    if (getComputedStyle(panel).position !== 'absolute'){ panel.style.maxHeight = ''; return; }
-    const r = document.querySelector('.searchwrap').getBoundingClientRect();
-    let avail = window.innerHeight - r.bottom - 20;
-    if (avail < 200){ window.scrollBy(0, 200 - avail); avail = 200; }   // bring the menu into view
-    panel.style.maxHeight = Math.min(400, avail) + 'px';
-  }
-  window.addEventListener('resize', fitPanel);
-
-  function openPanel(){
-    panelOpen = true;
-    renderPanel();
-    panel.hidden = false;
-    document.body.classList.add('menu-open');
-    plusBtn.setAttribute('aria-expanded', 'true');
-    fitPanel();
-    focusPanel();
-  }
-  function closePanel(){
-    panelOpen = false;
-    panel.hidden = true;
-    document.body.classList.remove('menu-open');
-    plusBtn.setAttribute('aria-expanded', 'false');
-  }
-
-  plusBtn.addEventListener('click', () => { panelOpen ? closePanel() : openPanel(); });
-
-  // Picking an area (or "All areas") filters the list right away.
-  panel.addEventListener('click', e => {
-    const b = e.target.closest('button[data-area]');
-    if (!b) return;
-    selArea = b.dataset.area === '' ? '' : areaList[+b.dataset.area].key;
-    closePanel();
-    afterFilterChange();
-    input.focus();
-  });
-
-  chipsEl.addEventListener('click', e => {
-    if (!e.target.closest('button[data-rm]')) return;
-    selArea = '';
-    afterFilterChange();
-  });
-
-  // click outside closes the menu (composedPath: the clicked option may already be re-rendered)
-  document.addEventListener('click', e => {
-    if (!panelOpen) return;
-    const path = e.composedPath();
-    if (!path.includes(panel) && !path.includes(plusBtn)) closePanel();
-  });
-
-  // ---------------- language switch ----------------
-  // The button shows the language you will switch TO (like a dark / light toggle).
-  function updateLangBtn(){
-    const toTe = lang === 'en';
-    langText.textContent = toTe ? 'తెలుగు' : 'English';
-    const msg = toTe ? 'Switch to Telugu' : 'Switch to English';
-    langBtn.setAttribute('aria-label', msg);
-    langBtn.title = msg;
-    document.documentElement.lang = lang;
-  }
-  langBtn.addEventListener('click', () => {
-    lang = lang === 'te' ? 'en' : 'te';
-    updateLangBtn();
-    if (ready){
-      if (sortIdx < 0) rebuild();   // no cust_id1: the list is arranged by name, so re-arrange
-      else relabel();               // order does not depend on language: only relabel areas
-    }
-    run();
-  });
-
-  // ---------------- drawing results ----------------
-  function highlight(text){
-    if (!curRe) return esc(text);
-    return text.split(curRe).map((p, i) => i % 2 ? '<mark>' + esc(p) + '</mark>' : esc(p)).join('');
-  }
-
-  function fieldHtml(i, v){
-    const wide = v.length > 40;
-    let val;
-    if (v === '') val = '<div class="value empty">—</div>';
-    else if (colKind[i] === 'price') val = '<div class="value mono">' + fmtPrice(v) + '</div>';
-    else if (colKind[i] === 'phone') val = '<div class="value mono"><a href="tel:' + esc(v.replace(/[^\d+]/g, '')) + '">' + esc(v) + '</a></div>';
-    else if (colKind[i] === 'mono') val = '<div class="value mono">' + esc(v) + '</div>';
-    else val = '<div class="value">' + (i === altIdx ? highlight(v) : esc(v)) + '</div>';   // alt name: show what matched
-    return '<div class="field' + (wide ? ' wide' : '') + '"><div class="label">' + esc(labelFor(i)) + '</div>' + val + '</div>';
-  }
-
-  // One customer in the list: the name with the dropdown arrow at the right end of the same line,
-  // then the customer ID (link-style: clicking it opens the details too) and the area.
-  // The details are filled in only when opened.
-  function cardHtml(idx){
-    const r = data[idx];
-    const idv = idIdx >= 0 ? show(r, idIdx) : '';
-    const arrow = '<button class="toggle" type="button" aria-expanded="false" aria-controls="d' + idx + '" aria-label="Customer details">' +
-                  '<span class="caret" aria-hidden="true"></span></button>';
-    let top = '';
-    if (idv) top += '<div class="field"><div class="label">' + esc(labelFor(idIdx)) + '</div><div class="value">' +
-                    '<button class="idbtn" type="button" aria-expanded="false" aria-controls="d' + idx + '"><span class="idtext">' + esc(idv) + '</span></button></div></div>';
-    if (areaIdx >= 0){
-      const a = show(r, areaIdx);
-      top += '<div class="field"><div class="label">' + esc(labelFor(areaIdx)) + '</div><div class="value' + (a ? '' : ' empty') + '">' + (a ? esc(a) : '—') + '</div></div>';
-    }
-    return '<article class="card" data-i="' + idx + '"><div class="card-head"><div class="card-name">' + highlight(show(r, nameIdx)) + '</div>' + arrow + '</div>' +
-           (top ? '<div class="card-top">' + top + '</div>' : '') + '<div class="details" id="d' + idx + '" hidden></div></article>';
-  }
-
-  // Everything else about the customer: phone (and any other fields), the package box, notes.
-// Total Amount = (price per month x months) - discount, worked out from the customer's joined row
-  function totalHtml(r){
-    const at = k => { const i = headersLow.indexOf(k); if (i < 0) return null; const t = String(r[i] == null ? '' : r[i]).replace(/[₹,\s]/g, ''); return t === '' || isNaN(Number(t)) ? null : Number(t); };
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ESC[c]);
+  const norm = v => String(v == null ? '' : v).trim().toLowerCase().replace(/\s+/g, ' ');
+  const pretty = h => { const s = h.replace(/_/g, ' ').trim(); return s.charAt(0).toUpperCase() + s.slice(1); };
+  // money helpers: discount is a rupee amount; Total = (price per month x months) - discount
+  const num = v => { const t = String(v == null ? '' : v).replace(/[₹,\s]/g, ''); return t === '' || isNaN(Number(t)) ? null : Number(t); };
+  const rupees = n => '₹' + n.toLocaleString('en-IN');
+  const fmtMoney = v => { const n = num(v); return n === null ? esc(v) : rupees(n); };
+  function packTotal(r){
+    const ph = packCols().map(h => h.toLowerCase());
+    const at = k => { const j = ph.indexOf(k); return j < 0 ? null : num(r[j]); };
     const price = at('pack_price_month') !== null ? at('pack_price_month') : at('pack_price');
-    if (price === null) return '';
+    if (price === null) return null;
     const months = at('months') === null ? 1 : at('months'), d = at('discount') || 0;
-    return '<div class="total"><span>Total Amount</span><b>₹' + (price * months - d).toLocaleString('en-IN') + '</b></div>';
+    return price * months - d;
+  }
+  const fmtPrice = v => { const n = Number(v); return isNaN(n) ? esc(v) : '₹' + n.toLocaleString('en-IN'); };
+
+  let headers = [], rows = [], pack = null, villages = null, needsPasscode = false;
+  let areaMap = new Map();          // area (lower case) → { en, te }
+  let nextNumber = 1, ready = false;
+
+  function setStatus(mode, text){ $('status').className = 'status ' + mode; $('statusText').textContent = text; }
+  function setMsg(text, kind){ msgEl.textContent = text || ''; msgEl.className = 'msg' + (kind ? ' ' + kind : ''); }
+
+  // ---------------- what the sheet already has ----------------
+  const col = name => headers.findIndex(h => h.toLowerCase() === name);
+
+  // the villages (areas) you can choose from: the "Villages" tab when the sheet has one
+  function villageList(){
+    if (!villages || !villages.headers || !villages.rows) return null;
+    const vh = villages.headers.map(h => String(h).trim().toLowerCase());
+    const vi = vh.indexOf('villages'), vt = vh.indexOf('vill_te');
+    if (vi < 0) return null;
+    return villages.rows.map(r => ({ en: String(r[vi] == null ? '' : r[vi]).trim(), te: vt >= 0 ? String(r[vt] == null ? '' : r[vt]).trim() : '' })).filter(v => v.en);
   }
 
-  function detailsHtml(idx){
-    const r = data[idx];
-    const fields = list => list.map(i => fieldHtml(i, show(r, i))).join('');
-    const rest = mainIdx.filter(i => i !== idIdx && i !== areaIdx);     // the ID and area are already in the row
-    let h = '';
-    if (rest.length) h += '<div class="grid">' + fields(rest) + '</div>';
-    if (packIdx.length) h += '<section class="pack"><div class="pack-title">' + esc(PACK_TITLE) + '</div><div class="grid">' + fields(packIdx) + '</div>' + totalHtml(r) + '</section>';
-    if (tailIdx.length) h += '<div class="grid tail">' + fields(tailIdx) + '</div>';
-    return h || '<div class="none">No more details.</div>';
+  function learn(){
+    const ia = col('area'), it = col('area_te'), i1 = col('cust_id1');
+    areaMap = new Map(); nextNumber = 1;
+    let max = 0;
+    const vlist = villageList();
+    if (vlist) vlist.forEach(v => { const k = norm(v.en); if (!areaMap.has(k)) areaMap.set(k, v); });
+    rows.forEach(r => {
+      if (!vlist && ia >= 0 && norm(r[ia])){
+        const k = norm(r[ia]), e = areaMap.get(k);
+        const te = it >= 0 ? String(r[it] || '').trim() : '';
+        if (!e) areaMap.set(k, { en: String(r[ia]).trim(), te });
+        else if (!e.te && te) e.te = te;
+      }
+      if (i1 >= 0){ const n = Number(r[i1]); if (!isNaN(n) && n > max) max = n; }
+    });
+    nextNumber = Math.floor(max) + 1;
   }
 
-  // ---------------- the details dropdown ----------------
-  // One customer is open at a time. It closes when its ID or arrow is tapped again, when another
-  // ID is tapped, on Esc, or by itself after AUTO_CLOSE_MS (5 s) without any response
-  // (tapping, moving the mouse, scrolling or typing on that customer starts the 5 s again).
-  let openIdx = -1, openTimer = 0;
-  const calmMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const packCols = () => pack && pack.headers ? pack.headers.map(h => String(h).trim()) : [];
+  const packRows = () => pack && pack.rows ? pack.rows : [];
+  const packById = id => { const pi = packCols().findIndex(h => h.toLowerCase() === 'pack_id'); return pi < 0 ? null : packRows().find(r => norm(r[pi]) === norm(id)) || null; };
 
-  function resetOpen(){ clearTimeout(openTimer); openIdx = -1; }     // the list was redrawn: nothing is open
-  function armTimer(){ clearTimeout(openTimer); openTimer = setTimeout(closeOpen, AUTO_CLOSE_MS); }
-
-  function closeOpen(){
-    if (openIdx < 0) return;
-    clearTimeout(openTimer);
-    const card = resultsEl.querySelector('.card[data-i="' + openIdx + '"]');
-    openIdx = -1;
-    if (!card) return;
-    const det = card.querySelector('.details');
-    const heightBefore = card.offsetHeight;
-    const scrolledPast = card.getBoundingClientRect().bottom <= 0;   // card is above the screen: keep what you see in place
-    det.hidden = true; det.innerHTML = '';
-    card.classList.remove('open');
-    card.querySelectorAll('.idbtn, .toggle').forEach(b => b.setAttribute('aria-expanded', 'false'));
-    if (scrolledPast) window.scrollBy(0, card.offsetHeight - heightBefore);
+  // the text of one package in the drop-down, e.g.  P07 — 100 Mbps · Fibre · ₹999 · 12 · 15%
+  function packLabel(r){
+    const ph = packCols(); const pi = ph.findIndex(h => h.toLowerCase() === 'pack_id');
+    const parts = [];
+    ph.forEach((h, j) => {
+      if (j === pi || !String(r[j] == null ? '' : r[j]).trim()) return;
+      const k = h.toLowerCase(), v = String(r[j]).trim();
+      parts.push(k.includes('price') ? '₹' + (isNaN(Number(v)) ? v : Number(v).toLocaleString('en-IN')) + '/month'
+               : k === 'months' ? v + (v === '1' ? ' month' : ' months')
+               : k === 'discount' ? (num(v) === null ? v : rupees(num(v))) + ' off' : v);
+    });
+    const tot = packTotal(r); if (tot !== null) parts.push('Total ' + rupees(tot));
+    return String(r[pi]).trim() + (parts.length ? ' — ' + parts.join(' · ') : '');
   }
 
-  function toggleCard(card){
-    const idx = +card.dataset.i;
-    if (openIdx === idx){ closeOpen(); return; }
-    closeOpen();
-    const det = card.querySelector('.details');
-    det.innerHTML = detailsHtml(idx);
-    det.hidden = false;
-    card.classList.add('open');
-    card.querySelectorAll('.idbtn, .toggle').forEach(b => b.setAttribute('aria-expanded', 'true'));
-    openIdx = idx;
-    armTimer();
-    card.scrollIntoView({ block:'nearest', behavior: calmMotion() ? 'auto' : 'smooth' });   // make sure the details are on screen
+  // ---------------- building the form from the sheet's headers ----------------
+  const isPackOverride = k => k !== 'pack_id' && (k.startsWith('pack_') || k === 'months' || k === 'discount');
+  function groupOf(k){
+    if (['cust_id1','cust_id2','cust_name','cust_name_te','alt_name','alt_name_te','phone'].includes(k)) return 'Customer';
+    if (k === 'area' || k === 'area_te') return 'Area';
+    if (k === 'pack_id' || isPackOverride(k)) return 'Package';
+    if (k.startsWith('notes')) return 'Notes';
+    return 'More details';
   }
 
-  resultsEl.addEventListener('click', e => {
-    const b = e.target.closest('.idbtn, .toggle');      // the customer ID and the arrow both open / close the details
-    if (b) toggleCard(b.closest('.card'));
-  });
-  // any response on the open customer starts the 5 seconds again
-  ['pointerdown','pointermove','wheel','touchstart','touchmove','keydown','focusin'].forEach(ev =>
-    resultsEl.addEventListener(ev, e => {
-      if (openIdx >= 0 && e.target.closest && e.target.closest('.card.open')) armTimer();
-    }, { passive:true }));
+  function fieldHtml(h){
+    const k = h.toLowerCase(), f = FIELD[k] || {};
+    const id = 'f_' + k, req = REQUIRED.includes(k);
+    const label = f.label || (PACK_LABELS[k] ? PACK_LABELS[k] : pretty(h));
+    const common = ' id="' + id + '" data-h="' + esc(h) + '" autocomplete="off"' + (f.te ? ' lang="te" spellcheck="false"' : '') +
+                   (req ? ' aria-required="true"' : '') + ' aria-describedby="e_' + k + '"';
+    let control;
+    if (k === 'area' && villageList()){
+      control = '<select' + common + '><option value="">Choose a village…</option>' +
+        villageList().map(v => '<option value="' + esc(v.en) + '">' + esc(v.en + (v.te ? ' — ' + v.te : '')) + '</option>').join('') + '</select>';
+    } else if (f.select && pack && packRows().length){
+      const pi = packCols().findIndex(x => x.toLowerCase() === 'pack_id');
+      control = '<select' + common + '><option value="">Choose a package…</option>' +
+        packRows().map(r => '<option value="' + esc(String(r[pi]).trim()) + '">' + esc(packLabel(r)) + '</option>').join('') + '</select>';
+    } else if (f.textarea){
+      control = '<textarea' + common + ' rows="2"' + (f.ph ? ' placeholder="' + esc(f.ph) + '"' : '') + '></textarea>';
+    } else {
+      control = '<input' + common + ' type="' + (f.type || 'text') + '"' + (f.min ? ' min="' + f.min + '"' : '') +
+        (f.type === 'tel' ? ' inputmode="tel"' : '') + (f.type === 'number' ? ' inputmode="numeric"' : '') +
+        (f.list ? ' list="areaList"' : '') + (f.caps ? ' autocapitalize="' + f.caps + '"' : '') +
+        (f.ph ? ' placeholder="' + esc(f.ph) + '"' : '') + '>';
+    }
+    let hint = f.hint || '';
+    if (k === 'area' && villageList()) hint = 'Choose the village. To add a new village, add it in the Villages tab of the sheet first.';
+    if (isPackOverride(k)) hint = "Leave empty to use the package's value.";
+    return '<div class="field' + (f.wide ? ' wide' : '') + '" data-k="' + k + '">' +
+           '<label for="' + id + '">' + esc(label) + (req ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>' +
+           control + (hint ? '<div class="hint">' + esc(hint) + '</div>' : '') + '<div class="err" id="e_' + k + '"></div></div>';
+  }
 
-  // ---------------- the list ----------------
-  function renderBatch(){
-    const end = Math.min(shown + PAGE_SIZE, results.length);
+  function renderForm(){
+    const order = ['Customer','Area','Package','Notes','More details'];
+    const by = {}; order.forEach(g => by[g] = []);
+    headers.forEach(h => { if (h) by[groupOf(h.toLowerCase())].push(h); });
     let html = '';
-    for (let i = shown; i < end; i++) html += cardHtml(results[i]);
-    resultsEl.insertAdjacentHTML('beforeend', html);
-    shown = end;
-    const left = results.length - shown;
-    moreBtn.hidden = left <= 0;
-    if (left > 0) moreBtn.textContent = 'Show ' + Math.min(PAGE_SIZE, left) + ' more (' + left.toLocaleString('en-IN') + ' left)';
+    order.forEach(g => {
+      if (!by[g].length) return;
+      html += '<section class="group"><h2>' + esc(g) + '</h2><div class="fields">' + by[g].map(fieldHtml).join('') + '</div>' +
+              (g === 'Package' && col('pack_id') >= 0 && pack ? '<div class="pack" id="packBox"></div>' : '') + '</section>';
+    });
+    if (!villageList()) html += '<datalist id="areaList">' + [...areaMap.values()].sort((a, b) => a.en.localeCompare(b.en)).map(a => '<option value="' + esc(a.en) + '"></option>').join('') + '</datalist>';
+    groupsEl.innerHTML = html;
+    resetValues();
+    showPack();
+    revealed = 1; applySteps();                          // only the first section at first
   }
 
-  // The list keeps loading by itself as you scroll (the button is only a fallback).
-  function fillViewport(){
-    for (let n = 0; n < 40 && shown < results.length && moreBtn.getBoundingClientRect().top < window.innerHeight + 800; n++) renderBatch();
-  }
-  if ('IntersectionObserver' in window) new IntersectionObserver(fillViewport, { rootMargin:'800px 0px' }).observe(moreBtn);
-
-  function run(){
-    const raw = input.value;
-    resetOpen();
-    resultsEl.innerHTML = ''; moreBtn.hidden = true; shown = 0; results = []; curRe = null;
-    app.classList.toggle('has-text', raw !== '');
-    const filtered = !!selArea;
-
-    if (!ready){
-      app.classList.toggle('has-query', raw.trim() !== '' || filtered);
-      metaEl.textContent = (raw.trim() !== '' || filtered) ? 'Loading customers…' : '';
-      return;
-    }
-
-    const t0 = performance.now();
-    const s = search(raw);            // customers are shown only while searching: text typed, or an area chosen
-    const ms = performance.now() - t0;
-    const active = s.q !== '' || filtered;
-    app.classList.toggle('has-query', active);
-
-    if (!active){ metaEl.textContent = count() + ' customers'; return; }
-
-    results = s.idx;
-    if (s.q) curRe = new RegExp('(' + s.toks.slice().sort((a, b) => b.length - a.length).map(escRe).join('|') + ')', 'giu');
-    const n = results.length;
-
-    if (!n){
-      metaEl.textContent = '0 matches';
-      resultsEl.innerHTML = s.q
-        ? '<div class="none">No customer found for “' + esc(raw.trim()) + '”' + (filtered ? ' in this area' : '') +
-          '.<br>Check the spelling, or try fewer letters.</div>'
-        : '<div class="none">No customers in this area yet.</div>';
-      return;
-    }
-    metaEl.textContent = s.q
-      ? n.toLocaleString('en-IN') + (n === 1 ? ' match' : ' matches') + ' in ' + (ms < 1 ? '<1' : ms.toFixed(0)) + ' ms'
-      : n.toLocaleString('en-IN') + (n === 1 ? ' customer' : ' customers');
-    renderBatch();
-    fillViewport();
-  }
-
-  // run() at most once per frame, however fast keys arrive
-  let raf = 0;
-  function schedule(){ if (!raf) raf = requestAnimationFrame(() => { raf = 0; run(); }); }
-
-  input.addEventListener('input', schedule);
-  clearBtn.addEventListener('click', () => { input.value = ''; run(); input.focus(); });
-  moreBtn.addEventListener('click', () => { renderBatch(); fillViewport(); });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape'){
-      if (panelOpen){ closePanel(); plusBtn.focus(); }
-      else if (openIdx >= 0) closeOpen();
-      else if (document.activeElement === input && input.value){ input.value = ''; run(); }
-    } else if (e.key === '/' && document.activeElement !== input && !e.metaKey && !e.ctrlKey){
-      e.preventDefault(); input.focus();
-    }
-  });
-
-  // ---------------- saved copy in the browser (IndexedDB) ----------------
-  // The page opens with last visit's list instantly, then updates quietly.
-  const DB_NAME = 'skjcn-customers', STORE = 'kv', CACHE_KEY = 'data:' + SCRIPT_URL;
-  function openDb(){
-    return new Promise((res, rej) => {
-      const r = indexedDB.open(DB_NAME, 1);
-      r.onupgradeneeded = () => r.result.createObjectStore(STORE);
-      r.onsuccess = () => res(r.result);
-      r.onerror = () => rej(r.error);
+  // ---------------- one section at a time ----------------
+  // The next section appears only when the one before it is complete (its required fields are filled),
+  // so the page stays light. The Save button (and passcode) appear after the last section.
+  let revealed = 1;
+  function groupDone(sec){
+    return [...sec.querySelectorAll('[data-h]')].every(el => {
+      const k = el.dataset.h.toLowerCase();
+      if (!REQUIRED.includes(k)) return true;
+      const v = el.value.trim();
+      return k === 'phone' ? /^\+?\d{7,15}$/.test(v.replace(/[\s-]/g, '')) : v !== '';
     });
   }
-  async function idbGet(k){
-    try{
-      const db = await openDb();
-      return await new Promise((res, rej) => {
-        const q = db.transaction(STORE).objectStore(STORE).get(k);
-        q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
-      });
-    }catch(e){ return null; }
+  function applySteps(){
+    const secs = [...groupsEl.querySelectorAll('.group')];
+    while (revealed < secs.length && groupDone(secs[revealed - 1])) revealed++;
+    secs.forEach((s, i) => { const on = i < revealed; if (on && s.hidden) s.classList.add('reveal'); s.hidden = !on; });
+    const final = !secs.length || (revealed >= secs.length && groupDone(secs[secs.length - 1]));
+    $('passGroup').hidden = !(needsPasscode && final);
+    const act = form.querySelector('.actions'); if (act) act.hidden = !final;
   }
-  async function idbSet(k, v){
-    try{
-      const db = await openDb();
-      await new Promise((res, rej) => {
-        const t = db.transaction(STORE, 'readwrite');
-        t.objectStore(STORE).put(v, k);
-        t.oncomplete = res; t.onerror = () => rej(t.error);
-      });
-    }catch(e){}
+  form.addEventListener('input', () => applySteps());
+  form.addEventListener('change', () => applySteps());
+
+  const ctl = h => groupsEl.querySelector('[data-h="' + h.replace(/"/g, '\\"') + '"]');
+  const ctlBy = k => { const h = headers.find(x => x.toLowerCase() === k); return h ? ctl(h) : null; };
+
+  function resetValues(){
+    groupsEl.querySelectorAll('[data-h]').forEach(el => { el.value = ''; delete el.dataset.auto; });
+    const n = ctlBy('cust_id1'); if (n){ n.value = String(nextNumber); n.dataset.auto = '1'; }   // a suggestion: the sheet gives the real number when saving
+    $('passcode').value = (() => { try { return sessionStorage.getItem('skjcn-pass') || ''; } catch (e) { return ''; } })();
   }
 
-  // ---------------- loading from the sheet ----------------
-  async function refresh(fresh, silent){
-    if (!silent) setStatus('', 'reloading…');
-    try{
-      const url = SCRIPT_URL + (fresh ? (SCRIPT_URL.includes('?') ? '&' : '?') + 'fresh=1' : '');
-      const res = await fetch(url);
-      const d = await res.json();
-      if (!d || !d.headers) throw new Error('unexpected reply from the script');
-      if (!ready || d.updated !== loadedStamp){
-        if (!setData(d)) return;
-        loadedStamp = d.updated;
-        idbSet(CACHE_KEY, d);
-        run();
-      }
-      setStatus('live', count() + ' customers, updated ' + clock());
-    }catch(err){
-      console.error(err);
-      setStatus('error', ready ? 'offline, using saved list' : 'could not reach the sheet');
+  // the chosen package, read-only, under the drop-down
+  function showPack(){
+    const box = $('packBox'); if (!box) return;
+    const sel = ctlBy('pack_id');
+    const r = sel && sel.value ? packById(sel.value) : null;
+    const ph = packCols(), pi = ph.findIndex(h => h.toLowerCase() === 'pack_id');
+    if (!r){ box.innerHTML = '<div class="pack-title">Package details</div><div class="pack-empty">Choose a package to see its details.</div>'; }
+    else {
+      const cells = ph.map((h, j) => {
+        if (j === pi) return '';
+        const k = h.toLowerCase(), v = String(r[j] == null ? '' : r[j]).trim();
+        return '<div><div class="pl">' + esc(PACK_LABELS[k] || pretty(h)) + '</div><div class="pv' + (k.includes('price') ? ' mono' : '') + '">' +
+               (v ? (k.includes('price') ? fmtPrice(v) : k === 'discount' ? fmtMoney(v) : esc(v)) : '—') + '</div></div>';
+      }).join('');
+      box.innerHTML = '<div class="pack-title">Package details · ' + esc(String(r[pi]).trim()) + '</div><div class="grid">' + cells + '</div>' +
+        (packTotal(r) !== null ? '<div class="total"><span>Total Amount</span><b>' + rupees(packTotal(r)) + '</b></div>' : '');
     }
+    // the package's own values show as hints in the optional override boxes
+    headers.forEach(h => {
+      const k = h.toLowerCase(); if (!isPackOverride(k)) return;
+      const el = ctl(h); if (!el) return;
+      const j = ph.findIndex(x => x.toLowerCase() === k);
+      el.placeholder = r && j >= 0 && String(r[j] || '').trim() ? 'Package: ' + String(r[j]).trim() : '';
+    });
   }
 
-  async function init(){
-    updateLangBtn();
-    $('profileLink').href = ADD_PAGE + (SCRIPT_URL ? '?u=' + encodeURIComponent(SCRIPT_URL) : '');   // the add page uses the same web app
-    if (!SCRIPT_URL){
-      $('setupBanner').hidden = false;
-      setData(DEMO);
-      setStatus('', 'demo data, not connected');
-      run();
+  // ---------------- live helpers ----------------
+  form.addEventListener('input', e => {
+    const el = e.target; if (!el.dataset || !el.dataset.h) { if (el.id === 'passcode') $('e_passcode').textContent = ''; return; }
+    clearError(el.dataset.h.toLowerCase());
+    const k = el.dataset.h.toLowerCase();
+    if (k === 'area'){                                   // an area that already exists: fill in its Telugu name
+      const known = areaMap.get(norm(el.value)), te = ctlBy('area_te');
+      if (te && known && known.te && (!te.value || te.dataset.auto === '1')){ te.value = known.te; te.dataset.auto = '1'; }
+      else if (te && te.dataset.auto === '1' && !known){ te.value = ''; delete te.dataset.auto; }
+    } else if (k === 'area_te' || k === 'cust_id1'){ delete el.dataset.auto; }
+  });
+  form.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.h && e.target.dataset.h.toLowerCase() === 'pack_id') showPack(); });
+
+  function setError(k, text){
+    const f = groupsEl.querySelector('.field[data-k="' + k + '"]');
+    if (f){ f.classList.add('invalid'); const e = f.querySelector('.err'); if (e) e.textContent = text; }
+  }
+  function clearError(k){
+    const f = groupsEl.querySelector('.field[data-k="' + k + '"]');
+    if (f){ f.classList.remove('invalid'); const e = f.querySelector('.err'); if (e) e.textContent = ''; }
+  }
+
+  // ---------------- checking and saving ----------------
+  function collect(){
+    const c = {};
+    groupsEl.querySelectorAll('[data-h]').forEach(el => {
+      const k = el.dataset.h.toLowerCase();
+      let v = el.value.trim();
+      if (k === 'phone') v = v.replace(/[\s-]/g, '');
+      if (k === 'cust_id1' && el.dataset.auto === '1') v = '';      // untouched suggestion: let the sheet number it when saving
+      c[el.dataset.h] = v;
+    });
+    // an area that already exists is saved with its existing spelling (and Telugu name), so the area filter never shows it twice
+    const ha = headers.find(x => x.toLowerCase() === 'area'), ht = headers.find(x => x.toLowerCase() === 'area_te');
+    if (ha && c[ha]){
+      const known = areaMap.get(norm(c[ha]));
+      if (known){ c[ha] = known.en; if (ht && !c[ht] && known.te) c[ht] = known.te; }
+      else c[ha] = c[ha].replace(/\s+/g, ' ');
+    }
+    return c;
+  }
+
+  function validate(c){
+    const problems = [];                                 // [[column, message], …]
+    const v = k => { const h = headers.find(x => x.toLowerCase() === k); return h ? (c[h] || '') : ''; };
+    REQUIRED.forEach(k => { if (col(k) >= 0 && !v(k)) problems.push([k, (FIELD[k] ? FIELD[k].label : pretty(k)) + ' is required.']); });
+    if (v('phone') && !/^\+?\d{7,15}$/.test(v('phone'))) problems.push(['phone', 'Enter a valid phone number (digits only, 7 to 15).']);
+    const i2 = col('cust_id2');
+    if (v('cust_id2') && i2 >= 0 && rows.some(r => norm(r[i2]) === norm(v('cust_id2')))) problems.push(['cust_id2', 'This Customer ID is already used.']);
+    const i1 = col('cust_id1');
+    if (v('cust_id1') && i1 >= 0 && rows.some(r => norm(r[i1]) === norm(v('cust_id1')))) problems.push(['cust_id1', 'This customer number is already used.']);
+    if (v('cust_id1') && !/^\d+$/.test(v('cust_id1'))) problems.push(['cust_id1', 'Use a whole number.']);
+    return problems;
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!ready) return;
+    const act = form.querySelector('.actions'); if (act && act.hidden) return;     // the last section is not finished yet
+    headers.forEach(h => clearError(h.toLowerCase()));
+    setMsg('');
+    const c = collect(), problems = validate(c);
+    if (needsPasscode && !$('passcode').value.trim()){ $('e_passcode').textContent = 'Enter the passcode.'; problems.push(['passcode', '']); }
+    if (problems.length){
+      problems.forEach(([k, m]) => { if (k !== 'passcode') setError(k, m); });
+      const first = problems[0][0] === 'passcode' ? $('passcode') : ctlBy(problems[0][0]);
+      if (first) first.focus();
+      setMsg('Please fix the ' + (problems.length === 1 ? 'highlighted field.' : problems.length + ' highlighted fields.'), 'error');
       return;
     }
-    const fetching = refresh(false, true);     // start the download right away…
-    const cached = await idbGet(CACHE_KEY);    // …while the saved copy loads
-    if (!ready && cached && cached.rows && setData(cached)){
-      loadedStamp = cached.updated;
-      setStatus('', count() + ' customers, saved copy');
-      run();
+
+    saveBtn.disabled = true; setMsg('Saving to the sheet…', 'info');
+    try {
+      let res;
+      if (!url){ await new Promise(r => setTimeout(r, 500)); res = { status:'ok', demo:true, cust_id1: c[headers.find(h => h.toLowerCase() === 'cust_id1')] || '', row: rows.length + 2 }; }
+      else {
+        let r, txt;
+        r = await fetch(url, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },     // plain text: no browser pre-check needed
+                               body: JSON.stringify({ action:'addCustomer', passcode: $('passcode').value.trim(), customer: c }) });
+        txt = await r.text();
+        try { res = JSON.parse(txt); }
+        catch (parseErr){                                                         // the script answered, but not with data
+          console.error('Script reply (HTTP ' + r.status + '):', txt.slice(0, 500));
+          saveBtn.disabled = false;
+          setMsg('Nothing was saved. The sheet\'s script did not accept the request (HTTP ' + r.status + '). This usually means the live web app is still an OLD version that cannot save, or it needs permission again. In Apps Script: Deploy → Manage deployments → Edit (pencil) → Version: New version → Deploy, and if Google asks, approve the permissions. Then reload this page and try again.', 'error');
+          return;
+        }
+      }
+      if (res.status !== 'ok') return failed(res);
+      try { if (needsPasscode) sessionStorage.setItem('skjcn-pass', $('passcode').value.trim()); } catch (err) {}
+      saved(c, res);
+    } catch (err){
+      console.error(err);
+      setMsg('Could not confirm that it was saved (check your internet connection). Before trying again, search for the customer, so you don\'t add them twice.', 'error');
+      saveBtn.disabled = false;
     }
-    await fetching;
-    setInterval(() => refresh(false, true), REFRESH_MS);
+  });
+
+  function failed(res){
+    saveBtn.disabled = false;
+    if (res.code === 'passcode'){ try { sessionStorage.removeItem('skjcn-pass'); } catch (e) {} $('e_passcode').textContent = 'Wrong passcode.'; $('passcode').focus(); setMsg('The passcode was not accepted.', 'error'); return; }
+    if (res.field){ setError(res.field, res.message); const el = ctlBy(res.field); if (el) el.focus(); }
+    setMsg(res.message || 'Could not save.', 'error');
   }
 
-  refreshBtn.addEventListener('click', () => refresh(true, false));  // fresh=1 skips the server cache
+  // after a successful save: remember the customer locally (so duplicates are caught without reloading) and show a summary
+  function saved(c, res){
+    const row = headers.map(h => c[h] != null ? c[h] : '');
+    const i1 = col('cust_id1'); if (i1 >= 0 && res.cust_id1) row[i1] = String(res.cust_id1);
+    if (!res.demo) rows.push(row);
+    learn();
+    const v = k => { const h = headers.find(x => x.toLowerCase() === k); return h ? (c[h] || '') : ''; };
+    const pid = v('pack_id'), pr = pid ? packById(pid) : null;
+    const items = [['Name', v('cust_name')], ['Customer ID', v('cust_id2')], ['Customer number', res.cust_id1 || v('cust_id1')],
+                   ['Phone', v('phone')], ['Area', v('area')], ['Package', pr ? packLabel(pr) : pid]].filter(x => x[1]);
+    $('summary').innerHTML = items.map(([l, t]) => '<div' + (l === 'Package' ? ' class="wide"' : '') + '><div class="pl">' + esc(l) + '</div><div class="pv">' + esc(t) + '</div></div>').join('');
+    $('doneTitle').textContent = res.demo ? 'Demo only: nothing was saved' : 'Customer saved';
+    $('doneNote').textContent = res.demo ? 'No sheet is connected, so this was only a test of the form.'
+      : v('cust_name') + ' was added to the sheet (row ' + res.row + '). They will show up when you search.';
+    form.hidden = true; doneEl.hidden = false; window.scrollTo(0, 0); $('againBtn').focus();
+    saveBtn.disabled = false; setMsg('');
+  }
+
+  $('againBtn').addEventListener('click', () => {
+    doneEl.hidden = true; form.hidden = false;
+    renderForm();                                        // fresh form: next customer number, updated area list
+    const first = ctlBy('cust_name') || groupsEl.querySelector('[data-h]'); if (first) first.focus();
+    window.scrollTo(0, 0);
+  });
+
+  // ---------------- loading the sheet's headers, areas and packages ----------------
+  function setup(d){
+    headers = (d.headers || []).map(x => String(x).trim());
+    rows = d.rows || []; pack = d.packages || null; villages = d.villages || null; needsPasscode = !!(d.config && d.config.needsPasscode); canAdd = !!(d.config && d.config.canAdd);
+    if (col('cust_name') < 0){ setStatus('error', 'column "cust_name" not found in the sheet'); return; }
+    learn(); renderForm();
+    applySteps();
+    ready = true; saveBtn.disabled = false;
+    setStatus('live', rows.length.toLocaleString('en-IN') + ' customers' + (pack ? ', ' + packRows().length + ' packages' : '') + (villageList() ? ', ' + villageList().length + ' villages' : '') + ' in the sheet');
+    if (url && !canAdd) setMsg('Warning: the live web app is an old version that can only read, so saving will fail. In Apps Script: Deploy → Manage deployments → Edit (pencil) → Version: New version → Deploy, then reload this page.', 'error');
+    if (!pack) setMsg('No "pack" tab was found in the sheet, so the package is typed in as plain text.', 'info');
+  }
+
+  let canAdd = true;
+  async function init(){
+    $('searchLink').href = $('backLink').href = SEARCH_PAGE;
+    if (!url){
+      $('demoBanner').hidden = false; setup(DEMO); setStatus('', 'demo data, not connected'); return;
+    }
+    try {
+      const r = await fetch(url); const d = await r.json();
+      if (!d || !d.headers) throw new Error('unexpected reply from the script');
+      setup(d);
+    } catch (err){
+      console.error(err);
+      setStatus('error', 'could not reach the sheet');
+      setMsg('Could not load the sheet, so the form cannot be filled in yet. Check the web app URL and your internet connection, then reload this page.', 'error');
+    }
+  }
   init();
 </script>
 </body>
