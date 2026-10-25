@@ -237,6 +237,9 @@
     border:1px solid rgba(255,97,21,.25);border-radius:12px;
   }
   .pack-title{font-size:12.5px;font-weight:600;line-height:1.4;color:var(--accent-deep);margin-bottom:10px;}
+  .pack .total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,97,21,.25);font-size:15px;}
+  .pack .total span{font-weight:700;}
+  .pack .total b{font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;}
   .tail{margin-top:16px;}
   .tail .field{grid-column:1 / -1;}
 
@@ -480,10 +483,10 @@
     packages: {
       headers: ["pack_id","pack_speed","pack_type","pack_price_month","months","discount"],
       rows: [
-        ["P01","30 Mbps","Basic","499","1","0%"],        ["P02","50 Mbps","Standard","699","1","0%"],
-        ["P03","100 Mbps","Fibre","999","1","0%"],       ["P04","200 Mbps","Unlimited","1499","1","0%"],
-        ["P05","50 Mbps","Standard","699","6","5%"],     ["P06","100 Mbps","Fibre","999","6","10%"],
-        ["P07","100 Mbps","Fibre","999","12","15%"],     ["P08","200 Mbps","Unlimited","1499","12","15%"]
+        ["P01","30 Mbps","Basic","499","1","0"],        ["P02","50 Mbps","Standard","699","1","0"],
+        ["P03","100 Mbps","Fibre","999","1","0"],       ["P04","200 Mbps","Unlimited","1499","1","0"],
+        ["P05","50 Mbps","Standard","699","6","210"],     ["P06","100 Mbps","Fibre","999","6","599"],
+        ["P07","100 Mbps","Fibre","999","12","1798"],     ["P08","200 Mbps","Unlimited","1499","12","2698"]
       ]
     },
     villages: {
@@ -508,7 +511,7 @@
   const LABELS = {
     cust_id2:"Customer ID", cust_name:"Name", phone:"Phone", area:"Area",
     pack_id:"Pack ID", pack_speed:"Speed", pack_type:"Type", pack_price:"Price", pack_price_month:"Price / month",
-    months:"Months", discount:"Discount", notes:"Notes", alt_name:"Alternate name"
+    months:"Months", discount:"Discount (₹)", notes:"Notes", alt_name:"Alternate name"
   };
 
   // Words used in the + menu and the filter chip (always English; only the area NAMES switch language)
@@ -734,7 +737,7 @@
     const teCols = Object.values(TRANSLATED);
     hiddenCol = low.map(k => HIDDEN_COLS.includes(k) || teCols.includes(k) || (k === SORT_COL && k !== ID_COL));
     colKind = low.map(k => {
-      if (k.includes('price')) return 'price';
+      if (k.includes('price') || k === 'discount') return 'price';
       if (k.includes('phone')) return 'phone';
       if (k.endsWith('_id') || k.includes('date')) return 'mono';
       return 'text';
@@ -951,13 +954,22 @@
   }
 
   // Everything else about the customer: phone (and any other fields), the package box, notes.
+// Total Amount = (price per month x months) - discount, worked out from the customer's joined row
+  function totalHtml(r){
+    const at = k => { const i = headersLow.indexOf(k); if (i < 0) return null; const t = String(r[i] == null ? '' : r[i]).replace(/[₹,\s]/g, ''); return t === '' || isNaN(Number(t)) ? null : Number(t); };
+    const price = at('pack_price_month') !== null ? at('pack_price_month') : at('pack_price');
+    if (price === null) return '';
+    const months = at('months') === null ? 1 : at('months'), d = at('discount') || 0;
+    return '<div class="total"><span>Total Amount</span><b>₹' + (price * months - d).toLocaleString('en-IN') + '</b></div>';
+  }
+
   function detailsHtml(idx){
     const r = data[idx];
     const fields = list => list.map(i => fieldHtml(i, show(r, i))).join('');
     const rest = mainIdx.filter(i => i !== idIdx && i !== areaIdx);     // the ID and area are already in the row
     let h = '';
     if (rest.length) h += '<div class="grid">' + fields(rest) + '</div>';
-    if (packIdx.length) h += '<section class="pack"><div class="pack-title">' + esc(PACK_TITLE) + '</div><div class="grid">' + fields(packIdx) + '</div></section>';
+    if (packIdx.length) h += '<section class="pack"><div class="pack-title">' + esc(PACK_TITLE) + '</div><div class="grid">' + fields(packIdx) + '</div>' + totalHtml(r) + '</section>';
     if (tailIdx.length) h += '<div class="grid tail">' + fields(tailIdx) + '</div>';
     return h || '<div class="none">No more details.</div>';
   }
