@@ -222,7 +222,7 @@
     alt_name_te:  { label:"Alternate name in Telugu", te:true },
     phone:        { label:"Phone",            type:"tel", ph:"10-digit number" },
     area:         { label:"Area",             list:true, ph:"Choose an area or type a new one", caps:"words" },
-    area_te:      { label:"Area in Telugu",   te:true, hint:"Filled in automatically for an area that already exists." },
+    area_te:      { label:"Area in Telugu",   te:true, hint:"Filled in automatically from the Villages tab." },
     pack_id:      { label:"Package",          select:true },
     notes:        { label:"Notes",            textarea:true, wide:true },
     notes_te:     { label:"Notes in Telugu",  te:true, textarea:true, wide:true }
@@ -233,14 +233,18 @@
   const DEMO = {
     headers: ["cust_id1","cust_id2","cust_name","cust_name_te","phone","area","area_te","pack_id","notes","notes_te"],
     rows: [
-      ["1001","SK1187","Ravi Kumar","రవి కుమార్","9876543210","Gandhi Nagar","గాంధీ నగర్","P07","",""],
-      ["1002","SK0921","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapeta","కొత్తపేట","P08","",""],
-      ["1003","SK2043","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Main Road","మెయిన్ రోడ్","P01","",""]
+      ["1001","SK1187","Ravi Kumar","రవి కుమార్","9876543210","Ramapuram","రామాపురం","P07","",""],
+      ["1002","SK0921","Ravi Teja Reddy","రవి తేజ రెడ్డి","9876501234","Kothapalli","కొత్తపల్లి","P08","",""],
+      ["1003","SK2043","Sri Lakshmi Naidu","శ్రీ లక్ష్మి నాయుడు","9988776655","Gangavaram","గంగవరం","P01","",""]
     ],
     packages: {
       headers: ["pack_id","pack_speed","pack_type","pack_price_month","months","discount"],
       rows: [["P01","30 Mbps","Basic","499","1","0%"],["P02","50 Mbps","Standard","699","1","0%"],["P03","100 Mbps","Fibre","999","1","0%"],["P04","200 Mbps","Unlimited","1499","1","0%"],
              ["P05","50 Mbps","Standard","699","6","5%"],["P06","100 Mbps","Fibre","999","6","10%"],["P07","100 Mbps","Fibre","999","12","15%"],["P08","200 Mbps","Unlimited","1499","12","15%"]]
+    },
+    villages: {
+      headers: ["villages","vill_te","vill_id"],
+      rows: [["Ramapuram","రామాపురం","V01"],["Kothapalli","కొత్తపల్లి","V02"],["Venkatapuram","వెంకటాపురం","V03"],["Lakshmipuram","లక్ష్మీపురం","V04"],["Gangavaram","గంగవరం","V05"]]
     },
     config: { needsPasscode: false }
   };
@@ -256,7 +260,7 @@
   const pretty = h => { const s = h.replace(/_/g, ' ').trim(); return s.charAt(0).toUpperCase() + s.slice(1); };
   const fmtPrice = v => { const n = Number(v); return isNaN(n) ? esc(v) : '₹' + n.toLocaleString('en-IN'); };
 
-  let headers = [], rows = [], pack = null, needsPasscode = false;
+  let headers = [], rows = [], pack = null, villages = null, needsPasscode = false;
   let areaMap = new Map();          // area (lower case) → { en, te }
   let nextNumber = 1, ready = false;
 
@@ -266,12 +270,23 @@
   // ---------------- what the sheet already has ----------------
   const col = name => headers.findIndex(h => h.toLowerCase() === name);
 
+  // the villages (areas) you can choose from: the "Villages" tab when the sheet has one
+  function villageList(){
+    if (!villages || !villages.headers || !villages.rows) return null;
+    const vh = villages.headers.map(h => String(h).trim().toLowerCase());
+    const vi = vh.indexOf('villages'), vt = vh.indexOf('vill_te');
+    if (vi < 0) return null;
+    return villages.rows.map(r => ({ en: String(r[vi] == null ? '' : r[vi]).trim(), te: vt >= 0 ? String(r[vt] == null ? '' : r[vt]).trim() : '' })).filter(v => v.en);
+  }
+
   function learn(){
     const ia = col('area'), it = col('area_te'), i1 = col('cust_id1');
     areaMap = new Map(); nextNumber = 1;
     let max = 0;
+    const vlist = villageList();
+    if (vlist) vlist.forEach(v => { const k = norm(v.en); if (!areaMap.has(k)) areaMap.set(k, v); });
     rows.forEach(r => {
-      if (ia >= 0 && norm(r[ia])){
+      if (!vlist && ia >= 0 && norm(r[ia])){
         const k = norm(r[ia]), e = areaMap.get(k);
         const te = it >= 0 ? String(r[it] || '').trim() : '';
         if (!e) areaMap.set(k, { en: String(r[ia]).trim(), te });
@@ -317,7 +332,10 @@
     const common = ' id="' + id + '" data-h="' + esc(h) + '" autocomplete="off"' + (f.te ? ' lang="te" spellcheck="false"' : '') +
                    (req ? ' aria-required="true"' : '') + ' aria-describedby="e_' + k + '"';
     let control;
-    if (f.select && pack && packRows().length){
+    if (k === 'area' && villageList()){
+      control = '<select' + common + '><option value="">Choose a village…</option>' +
+        villageList().map(v => '<option value="' + esc(v.en) + '">' + esc(v.en + (v.te ? ' — ' + v.te : '')) + '</option>').join('') + '</select>';
+    } else if (f.select && pack && packRows().length){
       const pi = packCols().findIndex(x => x.toLowerCase() === 'pack_id');
       control = '<select' + common + '><option value="">Choose a package…</option>' +
         packRows().map(r => '<option value="' + esc(String(r[pi]).trim()) + '">' + esc(packLabel(r)) + '</option>').join('') + '</select>';
@@ -330,6 +348,7 @@
         (f.ph ? ' placeholder="' + esc(f.ph) + '"' : '') + '>';
     }
     let hint = f.hint || '';
+    if (k === 'area' && villageList()) hint = 'Choose the village. To add a new village, add it in the Villages tab of the sheet first.';
     if (isPackOverride(k)) hint = "Leave empty to use the package's value.";
     return '<div class="field' + (f.wide ? ' wide' : '') + '" data-k="' + k + '">' +
            '<label for="' + id + '">' + esc(label) + (req ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>' +
@@ -346,7 +365,7 @@
       html += '<section class="group"><h2>' + esc(g) + '</h2><div class="fields">' + by[g].map(fieldHtml).join('') + '</div>' +
               (g === 'Package' && col('pack_id') >= 0 && pack ? '<div class="pack" id="packBox"></div>' : '') + '</section>';
     });
-    html += '<datalist id="areaList">' + [...areaMap.values()].sort((a, b) => a.en.localeCompare(b.en)).map(a => '<option value="' + esc(a.en) + '"></option>').join('') + '</datalist>';
+    if (!villageList()) html += '<datalist id="areaList">' + [...areaMap.values()].sort((a, b) => a.en.localeCompare(b.en)).map(a => '<option value="' + esc(a.en) + '"></option>').join('') + '</datalist>';
     groupsEl.innerHTML = html;
     resetValues();
     showPack();
@@ -510,13 +529,13 @@
   // ---------------- loading the sheet's headers, areas and packages ----------------
   function setup(d){
     headers = (d.headers || []).map(x => String(x).trim());
-    rows = d.rows || []; pack = d.packages || null; needsPasscode = !!(d.config && d.config.needsPasscode);
+    rows = d.rows || []; pack = d.packages || null; villages = d.villages || null; needsPasscode = !!(d.config && d.config.needsPasscode);
     if (col('cust_name') < 0){ setStatus('error', 'column "cust_name" not found in the sheet'); return; }
     learn(); renderForm();
     $('passGroup').hidden = !needsPasscode;
     ready = true; saveBtn.disabled = false;
-    setStatus('live', rows.length.toLocaleString('en-IN') + ' customers' + (pack ? ', ' + packRows().length + ' packages' : '') + ' in the sheet');
-    if (!pack) setMsg('No "Packages" tab was found in the sheet, so the package is typed in as plain text.', 'info');
+    setStatus('live', rows.length.toLocaleString('en-IN') + ' customers' + (pack ? ', ' + packRows().length + ' packages' : '') + (villageList() ? ', ' + villageList().length + ' villages' : '') + ' in the sheet');
+    if (!pack) setMsg('No "pack" tab was found in the sheet, so the package is typed in as plain text.', 'info');
   }
 
   async function init(){
