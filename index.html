@@ -464,7 +464,7 @@
   // (English is used if the Telugu cell is empty). The Telugu columns are never
   // shown as separate fields.
   const TRANSLATED = { cust_name:"cust_name_te", area:"area_te", alt_name:"alt_name_te", notes:"notes_te" };
-  const HIDDEN_COLS = ["connection_date"];   // columns that are never shown (SORT_COL is hidden automatically)
+  const HIDDEN_COLS = ["connection_date", "total_price"];   // total_price is shown as the bold Total Amount   // columns that are never shown (SORT_COL is hidden automatically)
 
   // Package details: these columns are grouped together in one box on every card
   // (any column whose name starts with "pack_" is added to the box too).
@@ -511,7 +511,7 @@
   const LABELS = {
     cust_id2:"Customer ID", cust_name:"Name", phone:"Phone", area:"Area",
     pack_id:"Pack ID", pack_speed:"Speed", pack_type:"Type", pack_price:"Price", pack_price_month:"Price / month",
-    months:"Months", discount:"Discount (₹)", notes:"Notes", alt_name:"Alternate name"
+    months:"Months", discount:"Discount (₹)", tv:"TV", ant:"ANT", notes:"Notes", alt_name:"Alternate name"
   };
 
   // Words used in the + menu and the filter chip (always English; only the area NAMES switch language)
@@ -737,14 +737,14 @@
     const teCols = Object.values(TRANSLATED);
     hiddenCol = low.map(k => HIDDEN_COLS.includes(k) || teCols.includes(k) || (k === SORT_COL && k !== ID_COL));
     colKind = low.map(k => {
-      if (k.includes('price') || k === 'discount') return 'price';
+      if (k.includes('price') || k === 'discount' || k === 'tv' || k === 'ant') return 'price';
       if (k.includes('phone')) return 'phone';
       if (k.endsWith('_id') || k.includes('date')) return 'mono';
       return 'text';
     });
 
     // where each column goes on the card: main fields, the package box, or the bottom (notes)
-    const isPack = k => PACK_COLS.includes(k) || k.startsWith('pack_');
+    const isPack = k => PACK_COLS.includes(k) || k.startsWith('pack_') || k === 'tv' || k === 'ant';
     mainIdx = []; packIdx = []; tailIdx = [];
     low.forEach((k, i) => {
       if (i === nameIdx || hiddenCol[i]) return;
@@ -956,6 +956,8 @@
   // Everything else about the customer: phone (and any other fields), the package box, notes.
 // Total Amount = (price per month x months) - discount, worked out from the customer's joined row
   function totalHtml(r){
+    const ti = headersLow.indexOf('total_price');
+    if (ti >= 0){ const t = String(r[ti] == null ? '' : r[ti]).replace(/[₹,\s]/g, ''); if (t !== '' && !isNaN(Number(t))) return '<div class="total"><span>Total Amount</span><b>₹' + Number(t).toLocaleString('en-IN') + '</b></div>'; }
     const at = k => { const i = headersLow.indexOf(k); if (i < 0) return null; const t = String(r[i] == null ? '' : r[i]).replace(/[₹,\s]/g, ''); return t === '' || isNaN(Number(t)) ? null : Number(t); };
     const price = at('pack_price_month') !== null ? at('pack_price_month') : at('pack_price');
     if (price === null) return '';
